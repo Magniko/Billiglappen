@@ -1,3 +1,5 @@
+test.py
+out.txt
 app/logging/*
 app/scrapers/*.csv
 app/scrapers/light_classes_xpaths/*

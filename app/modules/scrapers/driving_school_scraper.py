@@ -13,7 +13,7 @@ import sys
 
 
 
-API_KEY = "AIzaSyASmL0LUQcFsr3quETScQ0CHqqQRTkcWtY"
+API_KEY = None
 
 
 #viken_oslo_locations = ("60.534526,8.206372", "60.434324,9.540372", "59.892722,9.926970", "59.953415,11.045153", "60.142311,11.176861", "59.286386,10.985599")
@@ -36,7 +36,7 @@ counties = ("VIKEN", "OSLO")
 def Main():
 	"""hello :) """
 	#initializing dataframe
-	df = pd.DataFrame(columns=["id", "name", "website", "address", "municipalty", "county", "lat", "long", "phone_number", "rating", "place_id"])
+	df = pd.DataFrame(columns=["id", "name", "website", "address", "municipality", "county", "lat", "long", "phone_number", "rating", "place_id"])
 	place_ids = []
 	if len(sys.argv) <= 1:
 		#get place_ids of driving schools and remove duplicates

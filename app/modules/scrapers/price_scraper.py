@@ -11,13 +11,16 @@ import logging
 import sqlite3
 import sys
 import glob
-
+import os
+from app.modules.database_module.db import update_class
 
 logging.basicConfig(level=logging.DEBUG, format="[%(asctime)s]: %(threadName)s: %(message)s", datefmt="%H:%M:%S")
 start = time.time()
 
 n_lessons_ = {	"B": 10,
+				"B_1": 10,
 				"Ba": 10,
+				"Ba_1": 10,
 				"B96": 4,
 				"BE": 4,
 				"A": 5,
@@ -27,11 +30,12 @@ n_lessons_ = {	"B": 10,
 				"AM147": 5
 				}
 
-def Main():
+def Main(tag=None, school=None):
 	#while(True):
 
+	data_path = "app/data"
+	files = glob.glob(os.path.join(data_path, "light_classes_xpaths/*.csv"))
 
-	files = glob.glob("light_classes_xpaths/*.csv")
 	columns = (
 			"id",
 			"name",
@@ -60,30 +64,29 @@ def Main():
 
 
 	if 0==0:
-		school = "svesvetr4299"
-		#frames = pd.read_csv(f"light_classes_xpaths/{school}_light_classes.csv")
+		if school != None:
+			frames = pd.read_csv(os.path.join(data_path, f"light_classes_xpaths/{school}_light_classes.csv"))
+
 		df = df.append(frames, ignore_index=True)
 
-		tg = pd.read_csv("tg_driving_schools_asker.csv")
-
-		#tg = df1[df1["id"] == school]
-		tag = sys.argv[1]
-		if tag != "tg":
-			for class_ in df.itertuples(index=None):
-				if class_.type == tag:
-					t = threading.Thread(target=scrape_light_classes, args=(class_, ))
-					t.start()
-		else:
-			for basic in tg.itertuples(index=None):
-				t = threading.Thread(target=scrape_tg, args=(basic, ))
-				t.start()
+		tg = pd.read_csv(os.path.join(data_path, "tg_driving_schools_asker.csv"))
 
 
-def scrape_light_classes(school):
-		logging.debug("Starting scraping of %s on thread...", school.price_url)
+		#if tag != "tg":
+		for class_ in df.itertuples(index=None):
+			t = threading.Thread(target=scrape_light_classes, args=(class_, ))
+			t.start()
+		#else:
+		#	for basic in tg.itertuples(index=None):
+		#		t = threading.Thread(target=scrape_tg, args=(basic, ))
+		#		t.start()
 
 
-		url = format_url(school.price_url)
+def scrape_light_classes(class_):
+		logging.debug("Starting scraping of %s, %s on thread...", class_.price_url, class_.name)
+
+
+		url = format_url(class_.price_url)
 		r = urllib.request.urlopen(url)
 		try:
 			tree = lxml.html.fromstring(r.read())
@@ -95,12 +98,36 @@ def scrape_light_classes(school):
 
 		from_front = False
 
-		prices = {}
-		for i in range(5, len(school)-3):
-			if not pd.isnull(school[i]):
+		keys = 	(	
+					"package_price",
+					"lesson",
+					"evaluation",
+					"track",
+					"road",
+					"test",
+					"other",
+					"hidden",
+					"discount",
+					"n_lessons"
+				)
 
-				price_xpath = school[i]
-				price = 0
+		mc_upgrade_keys = 	(
+								"a12",
+								"a2a"
+							)
+
+
+		prices = dict.fromkeys(keys)
+
+		mc_upgrade_prices = dict.fromkeys(mc_upgrade_keys)
+
+		for i in range(5, len(class_)-3):
+			price = 0
+
+			if not pd.isnull(class_[i]):
+
+				price_xpath = class_[i]
+				
 
 				div = 1
 
@@ -121,29 +148,31 @@ def scrape_light_classes(school):
 
 
 					xpath = price_xpath.split()
-					e_info = (url, school._fields[i])
+					e_info = (url, class_._fields[i])
 
-					if with_naf and school._fields[i] == "track_xpath":
+					if with_naf and class_._fields[i] == "track_xpath":
 						price = int(sum([parse_xpath(xp, tree, e_info, from_front) for xp in xpath])/div - naf_fee)
 					else:
 						price = int(sum([parse_xpath(xp, tree, e_info, from_front) for xp in xpath])/div)
-
-				prices[school._fields[i].replace("_xpath", '')] = price
+					
 
 
 			else:
-				prices[school._fields[i].replace("_xpath", '')] = 0
+				price = 0
 
-
+			if class_._fields[i] == "a12_xpath" or class_._fields[i] == "a2a_xpath":
+				mc_upgrade_prices[class_._fields[i].replace("_xpath", '')] = price
+			else:
+				prices[class_._fields[i].replace("_xpath", '')] = price
 
 
 
 		package_price = 0
-		n = n_lessons_[school.type]
+		n = n_lessons_[class_.type]
 		with_test = True
 		front_package = False
 
-		package_price_xpath = school.package_price
+		package_price_xpath = class_.package_price
 
 
 		if "_NOT_XPATH" in package_price_xpath:
@@ -160,12 +189,14 @@ def scrape_light_classes(school):
 
 			package_price = parse_xpath(package_price_xpath, tree, [url, "package_price"], front_package)
 
+		prices["package_price"] = package_price
+
 		pre_discount_package_price = 0
 
 		if with_test:
-			pre_discount_package_price = prices["lesson"]*int(school.n_lessons) + prices["evaluation"]*2 + prices["track"] + prices["road"] + prices["test"] + prices["other"]
+			pre_discount_package_price = prices["lesson"]*int(class_.n_lessons) + prices["evaluation"]*2 + prices["track"] + prices["road"] + prices["test"] + prices["other"]
 		else:
-			pre_discount_package_price = prices["lesson"]*int(school.n_lessons) + prices["evaluation"]*2 + prices["track"] + prices["road"] + prices["other"]
+			pre_discount_package_price = prices["lesson"]*int(class_.n_lessons) + prices["evaluation"]*2 + prices["track"] + prices["road"] + prices["other"]
 
 
 		#add the NAF fee if applicable to the pre-discount price to get a proper discount
@@ -181,6 +212,23 @@ def scrape_light_classes(school):
 			no_prices = True
 			discount = 0
 		
+		prices["discount"] = discount
+		prices["n_lessons"] = class_.n_lessons
+
+		class_id = f"{class_.id}_{class_.type.lower()}"
+		ids = [class_id, class_.id, class_.type]
+
+		#print(prices)
+
+		msg = update_class(ids, prices)
+		if msg == 0:
+			logging.debug("No new prices of %s.", class_.name)
+		elif msg == 1:
+			logging.debug("Added new row of class %s to %s.", class_.type, class_.name)
+		elif msg == 2:
+			logging.debug("Updated price of class  %s for %s.", class_.type, class_.name)
+		elif msg == -1:
+			logging.debug("Error, scraper got an illegal value. Class %s for %s.", class_.type, class_.name)
 
 
 
@@ -188,36 +236,35 @@ def scrape_light_classes(school):
 
 
 
-		tot_price = 0
-		if no_prices:
-			tot_price =  prices["lesson"]*n + package_price
+		#tot_price = 0
+		#if no_prices:
+		#	tot_price =  prices["lesson"]*n + package_price
 
-		else:
-			tot_price =  prices["lesson"]*n + prices["evaluation"]*2 + prices["track"] + prices["road"] + prices["test"] + prices["other"]  + prices["hidden"] - discount
+		#else:
+		#	tot_price =  prices["lesson"]*n + prices["evaluation"]*2 + prices["track"] + prices["road"] + prices["test"] + prices["other"]  + prices["hidden"] - discount
 		
-		print(school.name)
-		print(prices)
+		#print(class_.name)
+		#print(prices)
 
-		#logging.debug("Price of lesson for %s: %d", school.type, prices["lesson"])
-		#logging.debug("Price of evaluation for %s: %d", school.type, prices["evaluation"])
-		#logging.debug("Price of track for %s: %d", school.type, prices["track"])
-		#logging.debug("Price of road for %s: %d", school.type, prices["road"])
-		#logging.debug("Price of test for %s: %d", school.type, prices["test"])
+		#logging.debug("Price of lesson for %s: %d", class_.type, prices["lesson"])
+		#logging.debug("Price of evaluation for %s: %d", class_.type, prices["evaluation"])
+		#logging.debug("Price of track for %s: %d", class_.type, prices["track"])
+		#logging.debug("Price of road for %s: %d", class_.type, prices["road"])
+		#logging.debug("Price of test for %s: %d", class_.type, prices["test"])
 
-		#logging.debug("Pre-dicount price of %s: %d", school.type, pre_discount_package_price)
-		logging.debug("Discount of %s: %d", school.type, discount)
-		#logging.debug("Package price %s: %d", school.type, package_price)
-		#print(school.name)
-		logging.debug("Total Price with %d lessons %s: %d", n, school.type, tot_price)
+		#logging.debug("Pre-dicount price of %s: %d", class_.type, pre_discount_package_price)
+		#logging.debug("Discount of %s: %d", class_.type, discount)
+		#logging.debug("Package price %s: %d", class_.type, package_price)
+		#print(class_.name)
+		#logging.debug("Total Price with %d lessons %s: %d", n, class_.type, tot_price)
 		#print()
 
-		#update_database(prices, )
 
 
 
 
 def scrape_tg(school):
-		logging.debug("Starting scraping of %s on thread...", school.price_url)
+		logging.debug("Starting scraping of %s, % on thread...", school.price_url, school.name)
 
 		url = format_url(school.price_url)
 
@@ -322,7 +369,7 @@ def parse_xpath(xpath, tree, e_info, front=False):
 
 
 
-def update_database(id, )
+
 
 def format_url(url):
     if not re.match("(?:http|https)://", url):
