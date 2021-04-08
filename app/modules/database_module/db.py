@@ -4,6 +4,34 @@ from datetime import datetime
 
 path = "app/database/"
 
+keys_school = (
+				"id",
+				"name",
+				"website",
+				"address",
+				"municipality",
+				"county",
+				"lat",
+				"long",
+				"phone_number",
+				"rating",
+				"place_id"
+				)
+
+keys_package = (
+				"package_price",
+				"lesson_price",
+				"evaluation_price",
+				"safety_track_price",
+				"safety_road_price",
+				"drive_test_price",
+				"other_price",
+				"hidden_price",
+				"discount",
+				"n_lessons",
+				""
+				)
+
 def __database__init__():
 
 	db = sqlite3.connect(os.path.join(path, "billiglappen.db"))
@@ -137,6 +165,19 @@ def update_school(id_, school):
 	cursor.execute(query, values)
 	db.commit()
 
+
+def get_all_driving_schools():
+
+	db = sqlite3.connect(os.path.join(path, "billiglappen.db"))
+	
+	cursor = db.cursor()
+
+
+	cursor.execute("SELECT * FROM driving_school")
+
+
+	return [dict(zip(keys_school, i)) for i in cursor.fetchall()]
+
 def get_driving_school(id_):
 
 	db = sqlite3.connect(os.path.join(path, "billiglappen.db"))
@@ -145,14 +186,13 @@ def get_driving_school(id_):
 
 
 	cursor.execute("SELECT * FROM driving_school WHERE driving_school_id=?", (id_,))
-	return cursor.fetchall()
+
+	return [dict(zip(keys_school, i)) for i in cursor.fetchall()]
+
 
 def get_class_prices(class_id):
-
-	db = sqlite3.connect(os.path.join(path, "billiglappen.db"))
-
-	cursor = db.cursor()
-	keys = (	"package_price",
+	keys_package = (
+				"package_price",
 				"lesson_price",
 				"evaluation_price",
 				"safety_track_price",
@@ -161,12 +201,24 @@ def get_class_prices(class_id):
 				"other_price",
 				"hidden_price",
 				"discount",
-				"n_lessons"
-			)
+				"n_lessons",
+				"last_updated"
+				)
 
-	query = f"""SELECT {", ".join(keys)} FROM light_class WHERE class_id="{class_id}";"""
+	db = sqlite3.connect(os.path.join(path, "billiglappen.db"))
+
+	cursor = db.cursor()
+
+
+	query = f"""SELECT {", ".join(keys_package)} FROM light_class WHERE class_id="{class_id}";"""
 	cursor.execute(query)
-	return cursor.fetchall()
+
+	results = cursor.fetchall()
+
+	if len(results) == 0:
+		return []
+	else:
+		return [dict(zip(keys_package, i)) for i in results][0]
 
 
 
@@ -178,20 +230,6 @@ def update_class(ids, prices):
 	cursor = db.cursor()
 
 	class_id = ids[0]
-
-	keys = (
-				"package_price",
-				"lesson_price",
-				"evaluation_price",
-				"safety_track_price",
-				"safety_road_price",
-				"drive_test_price",
-				"other_price",
-				"hidden_price",
-				"discount",
-				"n_lessons"
-			)
-
 
 	date = datetime.now().strftime('"%Y-%m-%d %H:%M:%S"')
 
@@ -217,7 +255,7 @@ def update_class(ids, prices):
 
 	#update row
 	else:
-		current_prices = dict(zip(keys, class_prices[0]))
+		current_prices = dict(zip(keys_package, class_prices[0]))
 
 		statements = []
 		for (prices_k, current_k) in zip(prices.keys(), current_prices.keys()):
@@ -225,8 +263,7 @@ def update_class(ids, prices):
 			if prices[prices_k] != current_prices[current_k] and prices[prices_k] != float("inf"):
 
 				if 2 > prices[prices_k]/current_prices[current_k] < 0.75:
-					#error_handler(something about the price scraped varying too much and should be investigated)
-
+					print("Too big variance. This message is a placeholder.")
 				else:
 					statements.append(f'{current_k} = {prices[prices_k]}')
 
@@ -248,6 +285,50 @@ def update_class(ids, prices):
 
 		else:
 			return 0
+
+def update_authorities(prices):
+	#for adding the NAF and Vegvesen prices
+	print("do something")
+
+def get_authority_prices(class_):
+	keys_authority = (
+						"naf_fee",
+						"drive_test_fee",
+						"theory_test_fee",
+						"issuance_fee",
+						"phote_fee",
+				)
+
+	test = "drive_test_fee"
+
+	if class_ in {"A", "A1", "A2"}:
+		test = "drive_test_fee_mc"
+	elif class_ == "BE":
+		test = "drive_test_fee_be"
+
+
+
+	query_authority = (
+						"naf_fee",
+						test,
+						"theory_test_fee",
+						"issuance_fee",
+						"phote_fee",
+				)
+
+
+
+	db = sqlite3.connect(os.path.join(path, "billiglappen.db"))
+
+	cursor = db.cursor()
+
+
+	query = f"""SELECT {", ".join(query_authority)} FROM light_class WHERE class_id="{class_id}";"""
+	cursor.execute(query)
+
+	results = cursor.fetchall()
+
+	return [dict(zip(keys_authority, i)) for i in cursor.fetchall()][0]
 
 
 

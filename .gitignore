@@ -1,5 +1,8 @@
-test.py
-out.txt
+API_KEY.py
+test*
+TODO.txt
+out*
 app/logging/*
 app/scrapers/*.csv
 app/scrapers/light_classes_xpaths/*
+__pycache__
