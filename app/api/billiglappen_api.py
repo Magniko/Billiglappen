@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from urllib import request, error, parse
 from pydantic import BaseModel, BaseConfig, validator
-from app.modules.database_module.db import get_all_driving_schools, get_driving_school, get_class_prices
+from app.modules.database_module.db import get_all_driving_schools, get_driving_school, get_class_prices, get_basic_course_prices, get_administration_prices
 import haversine as hs
 from API_KEY import API_KEY
 import json
@@ -21,42 +21,29 @@ classes = 	{
 			}
 
 
-class Price_Query(BaseModel):
-	class_: str
-	n: int
-	threshold: float
-	lat: float
-	long_: float
-	include_authority_fees = False
-
-
-	@validator("class_")
-	def class_is_valid(v):
-		if v not in classes:
-			raise ValueError("Class type is not valid")
-		else:
-			return v
 
 app = FastAPI()
 
 
-@app.post("/light_classes")
-def endpoint_class_prices(req: Price_Query):
+@app.get("/light_classes")
+def endpoint_class_prices(class_: str, n: int, threshold: float, lat: float, long_: float, include_admin_fees: bool=False):
+	if class_ not in classes:
+		raise ValueError("Class type is not valid")
+
 	driving_schools = [school for school in get_all_driving_schools() \
-	if hs.haversine((float(school["lat"]), float(school["long"])), (req.lat, req.long_)) < req.threshold]
+	if hs.haversine((float(school["lat"]), float(school["long"])), (lat, long_)) < threshold]
 
 	result_driving_schools = []
 
 	base_url = "https://maps.googleapis.com/maps/api/distancematrix/json"
 
-	authority = {}
 
-	if req.include_authority_fees == True:
-		authority = get_authority_prices(req.class_)
+	if include_admin_fees == True:
+		admin_fees = sum(get_administration_prices(class_).values())
 
 
 	for school in driving_schools:
-		params = parse.urlencode({"units": "metric", "origins": f"{req.lat},{req.long_}", 
+		params = parse.urlencode({"units": "metric", "origins": f"{lat},{long_}", 
 			"destinations": f"place_id:{school['place_id']}", "key": API_KEY})
 		url = f"{base_url}?{params}"
 		try:
@@ -65,13 +52,12 @@ def endpoint_class_prices(req: Price_Query):
 
 			distance = float(data["rows"][0]["elements"][0]["distance"]["value"])/1000
 			
-			class_id = f"{school['id']}_{req.class_}".lower()
-			if distance < req.threshold:
+			class_id = f"{school['id']}_{class_}".lower()
+			if distance < threshold:
 				school["distance"] = distance
 				class_prices = get_class_prices(class_id)
 				if len(class_prices) != 0:
 					school = dict(school, **class_prices)
-					n = req.n
 					if n < school["n_lessons"]:
 						n = school["n_lessons"]
 
@@ -80,44 +66,9 @@ def endpoint_class_prices(req: Price_Query):
 					school["safety_road_price"] + school["drive_test_price"] + \
 					school["other_price"] + school["hidden_price"] - school["discount"]
 
-					if req.include_authority_fees == True:
-						school["total_price"] += (authority["naf_fee"] + authority["drive_test_fee"] + \
-							authority["theory_test_fee"] + authority["issuance_fee"] + authority["phote_fee"])
+					if include_admin_fees == True:
+						school["total_price"] += admin_fees
 					result_driving_schools.append(school)
-
-
-		except error.URLError as e:
-			raise URLError(e)
-
-		except Exception as e:
-			print("Error")
-			#error handling module
-
-	return sorted(result_driving_schools, key = lambda i: i["total_price"])
-
-
-#for TG-course prices
-@app.post("/trafikalt_grunnkurs")
-def endpoint_class_prices(req: Price_Query):
-	driving_schools = [school for school in get_all_driving_schools() \
-	if hs.haversine((float(school["lat"]), float(school["long"])), (req.lat, req.long_)) < req.threshold]
-
-	result_driving_schools = []
-
-	base_url = "https://maps.googleapis.com/maps/api/distancematrix/json"
-
-
-	for school in driving_schools:
-		params = parse.urlencode({"units": "metric", "origins": f"{req.lat},{req.long_}", 
-			"destinations": f"place_id:{school['place_id']}", "key": API_KEY})
-		url = f"{base_url}?{params}"
-		try:
-			r = request.urlopen(url)
-			data = json.load(r)
-
-			distance = float(data["rows"][0]["elements"][0]["distance"]["value"])/1000
-			
-			########DO SOMETHING HERE
 
 
 		except error.URLError as e:
@@ -129,10 +80,56 @@ def endpoint_class_prices(req: Price_Query):
 
 	return sorted(result_driving_schools, key = lambda i: i["total_price"])
 
+
+#for TG-course prices
+@app.get("/trafikalt_grunnkurs")
+def endpoint_class_prices(threshold: float, lat: float, long_:float, over_25: bool=False):
+	driving_schools = [school for school in get_all_driving_schools() \
+	if hs.haversine((float(school["lat"]), float(school["long"])), (lat, long_)) < threshold]
+
+	result_driving_schools = []
+
+	base_url = "https://maps.googleapis.com/maps/api/distancematrix/json"
+
+
+	for school in driving_schools:
+		params = parse.urlencode({"units": "metric", "origins": f"{lat},{long_}", 
+			"destinations": f"place_id:{school['place_id']}", "key": API_KEY})
+		url = f"{base_url}?{params}"
+		try:
+			r = request.urlopen(url)
+			data = json.load(r)
+
+			distance = float(data["rows"][0]["elements"][0]["distance"]["value"])/1000
+			if distance < threshold:
+				school["distance"] = distance
+				basic_course_prices = get_basic_course_prices(school["id"])
+				if len(basic_course_prices) != 0:
+					school = dict(school, **basic_course_prices)
+
+					if over_25 == True:
+						school["tg_package_price"] = school["first_aid_price"] + school["night_driving_price"]
+
+					result_driving_schools.append(school)
+
+
+
+
+		except error.URLError as e:
+			raise URLError(e)
+
+		#except Exception as e:
+		#	print("Error")
+			#error handling module
+
+	return sorted(result_driving_schools, key = lambda i: i["tg_package_price"])
+
 	
 
 
-
+@app.get("/naf_vegvesen_gebyrer")
+def endpoint_administration_prices():
+	return get_administration_prices()
 
 	
 

@@ -12,28 +12,15 @@ import sqlite3
 import sys
 import glob
 import os
-from app.modules.database_module.db import update_class
+from app.modules.database_module.db import update_class, update_basic_course, update_administration
 
 logging.basicConfig(level=logging.DEBUG, format="[%(asctime)s]: %(threadName)s: %(message)s", datefmt="%H:%M:%S")
 start = time.time()
 
-n_lessons_ = {	"B": 10,
-				"B_1": 10,
-				"Ba": 10,
-				"Ba_1": 10,
-				"B96": 4,
-				"BE": 4,
-				"A": 5,
-				"A1": 8,
-				"A2": 5,
-				"AM146": 5,
-				"AM147": 5
-				}
+data_path = "app/data"
 
-def Main(tag=None, school=None):
-	#while(True):
+def Main(school=None):
 
-	data_path = "app/data"
 	files = glob.glob(os.path.join(data_path, "light_classes_xpaths/*.csv"))
 
 	columns = (
@@ -63,27 +50,41 @@ def Main(tag=None, school=None):
 		frames.append(frame)
 
 
-	if 0==0:
-		if school != None:
-			frames = pd.read_csv(os.path.join(data_path, f"light_classes_xpaths/{school}_light_classes.csv"))
 
-		df = df.append(frames, ignore_index=True)
+	if school != None:
+		frames = pd.read_csv(os.path.join(data_path, f"light_classes_xpaths/{school}_light_classes.csv"))
 
-		tg = pd.read_csv(os.path.join(data_path, "tg_driving_schools_asker.csv"))
+	df = df.append(frames, ignore_index=True)
+
+	tg = pd.read_csv(os.path.join(data_path, "tg_driving_schools_asker.csv"))
+		
+	t_list = []
+
+	for class_ in df.itertuples(index=None):
+		t = threading.Thread(target=scrape_light_classes, args=(class_, ), daemon=True)
+		t_list.append(t)
+		t.start()
+
+	for basic in tg.itertuples(index=None):
+		t = threading.Thread(target=scrape_tg, args=(basic, ), daemon=True)
+		t_list.append(t)
+		t.start()
+
+	scrape_administration_prices()
+
+	for t in t_list:
+		t.join(60)
+		if t.is_alive():
+			logging.debug("%s timed out...", t.name)
+
+	return 0
 
 
-		#if tag != "tg":
-		for class_ in df.itertuples(index=None):
-			t = threading.Thread(target=scrape_light_classes, args=(class_, ))
-			t.start()
-		#else:
-		#	for basic in tg.itertuples(index=None):
-		#		t = threading.Thread(target=scrape_tg, args=(basic, ))
-		#		t.start()
+
 
 
 def scrape_light_classes(class_):
-		logging.debug("Starting scraping of %s, %s on thread...", class_.price_url, class_.name)
+		logging.debug("Starting scraping of %s, %s...", class_.price_url, class_.name)
 
 
 		url = format_url(class_.price_url)
@@ -168,7 +169,6 @@ def scrape_light_classes(class_):
 
 
 		package_price = 0
-		n = n_lessons_[class_.type]
 		with_test = True
 		front_package = False
 
@@ -218,53 +218,22 @@ def scrape_light_classes(class_):
 		class_id = f"{class_.id}_{class_.type.lower()}"
 		ids = [class_id, class_.id, class_.type]
 
-		#print(prices)
 
 		msg = update_class(ids, prices)
-		if msg == 0:
-			logging.debug("No new prices of %s.", class_.name)
-		elif msg == 1:
+
+		if msg == 1:
 			logging.debug("Added new row of class %s to %s.", class_.type, class_.name)
 		elif msg == 2:
 			logging.debug("Updated price of class  %s for %s.", class_.type, class_.name)
 		elif msg == -1:
 			logging.debug("Error, scraper got an illegal value. Class %s for %s.", class_.type, class_.name)
-
-
-
-
-
-
-
-		#tot_price = 0
-		#if no_prices:
-		#	tot_price =  prices["lesson"]*n + package_price
-
-		#else:
-		#	tot_price =  prices["lesson"]*n + prices["evaluation"]*2 + prices["track"] + prices["road"] + prices["test"] + prices["other"]  + prices["hidden"] - discount
-		
-		#print(class_.name)
-		#print(prices)
-
-		#logging.debug("Price of lesson for %s: %d", class_.type, prices["lesson"])
-		#logging.debug("Price of evaluation for %s: %d", class_.type, prices["evaluation"])
-		#logging.debug("Price of track for %s: %d", class_.type, prices["track"])
-		#logging.debug("Price of road for %s: %d", class_.type, prices["road"])
-		#logging.debug("Price of test for %s: %d", class_.type, prices["test"])
-
-		#logging.debug("Pre-dicount price of %s: %d", class_.type, pre_discount_package_price)
-		#logging.debug("Discount of %s: %d", class_.type, discount)
-		#logging.debug("Package price %s: %d", class_.type, package_price)
-		#print(class_.name)
-		#logging.debug("Total Price with %d lessons %s: %d", n, class_.type, tot_price)
-		#print()
-
-
-
+		else:
+			logging.debug("No new prices of %s for %s", class_.type, class_.name)
+		return msg
 
 
 def scrape_tg(school):
-		logging.debug("Starting scraping of %s, % on thread...", school.price_url, school.name)
+		logging.debug("Starting scraping of %s, %s...", school.price_url, school.name)
 
 		url = format_url(school.price_url)
 
@@ -274,9 +243,23 @@ def scrape_tg(school):
 		except:
 			error_handler(5, [url])
 
-		prices = {}
+		keys = (
+				"tg_package_price",
+				"theory",
+	  			"firstaid",
+	  			"night",
+	  			"mc_intro",
+	  			"moped_intro",
+	  			"discount"
+	  			)
+		from_front = False
+
+		prices = dict.fromkeys(keys)
 
 		for i in range(4, len(school)-1):
+			price = 0
+
+
 			if not pd.isnull(school[i]):
 
 				price_xpath = school[i]
@@ -315,23 +298,83 @@ def scrape_tg(school):
 			tg_package_price = prices["theory"] + prices["night"]
 		
 		else:
-			tg_package_price = parse_xpath(school.tg_package_price, tree, [url, "tg_package_price"])
+			tg_package_price = parse_xpath(school.tg_package_price, tree, (url, "tg_package_price"))
 		
+		prices["tg_package_price"] = tg_package_price
 
-		tg_pre_discount_under_25 = prices["theory"] + prices["night"]
-		tg_package_over_25 = prices["firstaid"] + prices["night"]
-		tg_discount_under_25 = tg_pre_discount_under_25 - tg_package_price
+		tg_pre_discount_package_price = prices["theory"] + prices["night"]
+		prices["discount"] = tg_pre_discount_package_price - tg_package_price
 
-		print(school.name)
-		print(prices)
-		#logging.debug("Price of theory for %s: %d", school.id, prices["theory"])
-		#logging.debug("Price of firstaid for  %s: %d", school.id, prices["firstaid"])
-		#logging.debug("Price of lowlight for %s: %d", school.id, prices["night"])
-		#logging.debug("Price of MC intro for %s: %d", school.id, prices["mc_intro"])
-		#logging.debug("Price of moped intro for  %s: %d", school.id, prices["moped_intro"])
-		logging.debug("Package price of %s: %d", school.id, tg_package_price)
-		#logging.debug("Package price without discount of %s: %d", school.id, tg_pre_discount_under_25)
-		#logging.debug("Discount of %s: %d", school.id, tg_discount_under_25)
+
+		msg = update_basic_course(school.id, prices)
+
+		if msg == 1:
+			logging.debug("Added TG-course prices to %s.", school.id)
+		elif msg == 2:
+			logging.debug("Updated prices of TG-courses for %s.", school.id)
+		elif msg == -1:
+			logging.debug("Error, scraper got an illegal value. TG-courses for %s", school.id)
+		else:
+			logging.debug("No new prices of TG-courses for %s.", school.id)
+
+		return msg
+
+def scrape_administration_prices():
+	logging.debug("Starting scraping of NAF and Vegvesen prices...")
+	
+	df = pd.read_csv(os.path.join(data_path, "administration_prices.csv"))
+
+	url_naf = df["naf_url"].item()
+
+	url_vegvesen = df["vegvesen_url"].item()
+
+	r = urllib.request.urlopen(url_naf)
+	try:
+		tree = lxml.html.fromstring(r.read())
+	except:
+		error_handler(5, [url])
+
+	keys = (
+				"naf",
+				"test_b",
+				"theory_test",
+				"issuance",
+				"photo",
+		  		"test_mc",
+		  		"test_be"
+		  	)
+
+	prices = dict.fromkeys(keys)
+
+	prices["naf"] = parse_xpath(df["naf_xpath"].item(), tree, (url_naf, "naf_xpath"))
+
+
+	r = urllib.request.urlopen(url_vegvesen)
+	try:
+		tree = lxml.html.fromstring(r.read())
+	except:
+		error_handler(5, [url])
+
+
+
+	for i in df.columns[3:]:
+		prices[i.replace("_xpath", '')] = parse_xpath(df[i].item(), tree, (url_vegvesen, i))
+
+
+
+	msg = update_administration(prices)
+
+	if msg == 1:
+		logging.debug("Added prices for NAF and Vegvesen fees")
+	elif msg == 2:
+		logging.debug("Updated prices for NAF and Vegvesen fees.")
+	elif msg == -1:
+		logging.debug("Error, scraper got an illegal value. Fees of NAF and Vegvesen")
+	else:
+		logging.debug("No new prices for NAF and Vegvesen fees")
+	
+	return msg
+
 
 
 
@@ -350,10 +393,17 @@ def parse_xpath(xpath, tree, e_info, front=False):
 		error_handler(0, e_info)
 		return float("inf")
 
+
+
 	element = re.sub(r"(?<=\d) (?=\d)|(^[^\d]+|(?<=\d)[^\d]+$)", '', element).split("+")
 	prices = []
 	for el in element:
 		el = re.sub(r"\D+$", '', el)
+
+		if not (any(i.isdigit() for i in el)):
+			error_handler(1, e_info)
+			return float("inf")
+
 
 		if front:
 			el = el.split()[0]
