@@ -1,0 +1,8 @@
+app==0.0.1
+fastapi==0.63.0
+haversine==2.3.0
+lxml==4.5.0
+lxml==4.5.0
+pandas==1.0.1
+pandas==1.0.1
+pydantic==1.8.1
