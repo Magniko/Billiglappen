@@ -26,6 +26,14 @@ app = FastAPI()
 
 API_KEY = os.environ['API_KEY']
 
+#configuring headers for CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET, POST"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/light_classes")
 def endpoint_class_prices(class_: str, n: int, threshold: float, lat: float, long_: float, include_admin_fees: bool=False):
