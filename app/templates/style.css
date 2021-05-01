@@ -1,0 +1,77 @@
+body {
+    background-color: rgb(58, 58, 58)
+}
+.header {
+    width: 100%;
+    height: 100px;
+    display: block;
+    text-align: start;
+    background: #101010;
+
+}
+.logo-container {
+    height: 100%;
+    display: table;
+
+
+}
+.logo-container img{
+    float: left;
+    width: 100px;
+    height: 100px;
+}
+
+.logo-container h1{
+    color: #ffffff;
+    position: relative;
+    display: table-cell;
+    vertical-align: middle;
+    font-family: 'Titillium Web', sans-serif;
+    font-size: 32px;
+    left: 20px;
+}
+
+.type-selection {
+    margin: auto 0;
+    text-align: center;
+}
+
+
+.type-selection button{
+    background-image: linear-gradient(#17b4b7, #34aa99);
+    display: inline-block;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-right: 25px;
+    padding-left: 25px;
+    color: #ffffff;
+    text-transform: uppercase;
+    font-size: 18px;
+
+}
+
+.form {
+    margin: auto 0;
+    border-radius: 5px;
+    color: #ffffff;
+    border: 2px solid #ccc;
+    padding: 35px;     
+}
+.form * {
+    float: left;
+
+}
+.form#suggestion-element{
+    float: none;
+}
+.form label {
+    margin: 5px 10px 5px 0;
+}
+
+#suggestion-list {
+    position: absolute;
+}
+.suggestion-element {
+
+
+}

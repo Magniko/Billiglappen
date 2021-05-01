@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Billiglappen.no</title>
+    <link rel="stylesheet" type="text/css" href="style.css" /> 
+    <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+<div class="header">
+    <div class="logo-container">
+        <img src="img/billiglappen.jpg" alt="Billiglappen.no logo">
+        <h1>Billiglappen.no</h1>
+    </div>
+</div>
+
+<div class="type-selection">
+    <button id>Lette Klasser</button>
+    <button id>Trafikalt Grunnkurs</button>
+
+</div>
+
+<div class="form" id="light_classes_div">
+    <form action="" METHOD="GET" ID="light-classes-form">
+
+    <div class="select-class">
+        <label for="light-classes">Klasse:</label>
+        <select id="light-classes">
+            <option selected value="B">B</option>
+            <option value="Ba">B-automat</option>
+            <option value="B96">B96</option>
+            <option value="BE">BE</option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="A">A</option>
+            <option value="AM146">Moped</option>
+            <option value="AM147">Mopedbil</option>
+        </select>
+    </div>
+<!-- <button id="get-position">Gi posisjon</button>-->
+
+    <div class="set-address">
+        <input list="suggestion-list" type="text" id="position-search" placeholder="Skriv inn en addresse å reise fra..."/>
+        <datalist id="suggestion-list">
+            <option data-value="GEOPOS">Min posisjon</option>
+        </datalist>
+        
+    </div>
+    
+    <div class="set-lessons">
+        <label for="lessons-slider">Antall kjøretimer:</label>
+        <input type="range" min="0" max="25" value="10" class="slider" id="lessons-slider">
+        <label for="lessons-slider" id="lessons-value">10</label>
+    </div>
+    <div class="set-distace">
+        <label for="distance-slider">Maks avstand i km:</label>
+        <input type="range" min="0.0" max="50.0" step="0.1" value="10.0" class="slider" id="distance-slider">
+        <input type="text" id="distance-value" value="10.0">
+    </div>
+
+    <div class="set-admin-prices">
+        <label for="admin-prices">Inkludere kostnader fra NAF og Statens Vegvesen?</label><br>
+        <input type="checkbox" id="admin-prices">
+    </div>
+    <br>
+    <input type="submit" value="send">
+
+
+
+    </form>
+</div>
+</body>
+
+  <script src="app.js"></script>
+  </html>
+  
