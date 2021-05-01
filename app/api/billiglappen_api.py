@@ -3,6 +3,7 @@ from urllib import request, error, parse
 from pydantic import BaseModel, BaseConfig, validator
 from app.modules.database_module.db import get_all_driving_schools, get_driving_school, get_class_prices, get_basic_course_prices, get_administration_prices
 import haversine as hs
+import os
 import json
 
 
@@ -22,6 +23,8 @@ classes = 	{
 
 
 app = FastAPI()
+
+API_KEY = os.environ['API_KEY']
 
 
 @app.get("/light_classes")

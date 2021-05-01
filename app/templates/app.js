@@ -50,8 +50,7 @@ positionSearch.addEventListener("input", () => {
         "side": 0
     }
 
-    const queryString = Object.keys(parameters).map(key => key + '=' + parameters[key]).join('&');
-    url = `${url}?${queryString}`;
+    url = `${url}?${stringToQuery(parameters)}`;
     fetch(url, {
         method: "GET",
         headers: {
@@ -143,13 +142,28 @@ form.addEventListener('submit', event => {
     if(hasAdminPrices.checked == true)
         adminPrices = true;
 
-    console.log(`
-    Package: ${package_class}
-    Lat: ${lat}
-    Long: ${long}
-    Lessons: ${n}
-    Distance: ${distance}
-    AdminPrices? ${adminPrices}`);
+
+    let url = "https://api-billiglappen.herokuapp.com/light_classes"
+    const parameters = {
+        "class_": package_class,
+        "n" : n,
+        "threshold": distance,
+        "lat": lat,
+        "long": long,
+        "include_admin_fees": adminPrices
+    }
+    url = `${url}?${stringToQuery(parameters)}`;
+
+    fetch(url, {
+        method: "GET",
+        headers: {
+            "Accept": "application/json"
+        }
+    })
+    .then(response => response.json())
+    .catch(error => alerth(error))
+    .then(data =>
+        console.log(data))
 });
 
 
@@ -162,3 +176,8 @@ distanceSlider.addEventListener("input", event =>{
     distanceValue.value = distanceSlider.value;
 
 });
+
+const stringToQuery = parameters => 
+    Object.keys(parameters).map(key => 
+        key + '=' + parameters[key])
+        .join('&');
