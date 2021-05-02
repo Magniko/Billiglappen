@@ -217,8 +217,8 @@ def scrape_light_classes(class_):
         )
 
     # add the NAF fee if applicable to the pre-discount price to get a proper discount
-    if with_naf:
-        pre_discount_package_price -= naf_fee
+    if with_naf and  class_.package_price != "NO_PACK":
+        pre_discount_package_price += naf_fee
 
     discount = pre_discount_package_price - package_price
 
