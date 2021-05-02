@@ -15,28 +15,12 @@ const distanceValue = document.querySelector("#distance-value");
 
 const hasAdminPrices = document.querySelector("#admin-prices");
 
+const cardResults = document.querySelector(".card-results");
 
+const totalPrices = document.querySelector(".total-price");
 
 let latitude;
 let longitude;
-
-/* getPosition.addEventListener("click", event => {
-    event.preventDefault();
-    if(!navigator.geolocation)
-        alert('Geolocation is not supported by your browser');
-    else {
-        navigator.geolocation.getCurrentPosition(
-            posData => {
-                console.log(posData);
-                latitude = posData.coords.latitude;
-                longitude = posData.coords.longitude;
-                console.log(latitude, longitude);
-            },
-            error => console.log(error)
-        );
-    }  
-}); */
-
 
 positionSearch.addEventListener("input", () => {
 
@@ -84,13 +68,6 @@ positionSearch.addEventListener("input", () => {
 });
 
 
-
-
-suggestionList.addEventListener("click", event => {
-    console.log("kek");
-})
-
-
 document.addEventListener("change", async event => {
     event.preventDefault();
 
@@ -118,7 +95,6 @@ document.addEventListener("change", async event => {
             const coordArray = coordinates.split(",")
             latitude = parseFloat(coordArray[0]);
             longitude = parseFloat(coordArray[1]);
-            console.log(latitude, longitude);
         }
     }
 
@@ -128,6 +104,8 @@ document.addEventListener("change", async event => {
 
 form.addEventListener('submit', event => {
     event.preventDefault();
+
+    cardResults.innerHTML = "";
 
     const package_class = lightClassSelector.value;
 
@@ -149,7 +127,7 @@ form.addEventListener('submit', event => {
         "n" : n,
         "threshold": distance,
         "lat": lat,
-        "long": long,
+        "long_": long,
         "include_admin_fees": adminPrices
     }
     url = `${url}?${stringToQuery(parameters)}`;
@@ -161,14 +139,42 @@ form.addEventListener('submit', event => {
         }
     })
     .then(response => response.json())
-    .catch(error => alerth(error))
-    .then(data =>
-        console.log(data))
+    .catch(error => alert(error))
+    .then(data => {
+
+        const html = data.map(pack => `
+            <div class="package-container">
+                <h4><b>${pack.name}</b></h4>
+                <div class="total-price">
+                    <p><b>Totalpris:</b> ${formatPrice(pack.total_price)},-</p>
+                </div>
+                <div class="lessons-included">
+                    <p><b>Kjøretimer inkludert:</b> ${pack.n_lessons}</p>
+                </div>
+                <div class="distance">
+                    <p><b>Avstand:</b> ${pack.distance.toFixed(2)}km</p>
+                </div>
+                <div class="rating">
+                    <p><b>Vurdering:</b> ${checkRating(pack.rating)}</p>
+                </div>
+            </div>`)
+            .join("");
+
+
+        cardResults.innerHTML = html;
+
+    });
+        
 });
 
 
 lessonSlider.addEventListener("input", event =>{
     rangeValue.innerHTML = lessonSlider.value;
+
+    //TODO: dynaimcally change total price depending on amount of lessons
+/*     let totalPrice = 
+    totalPrices.innerHTML =  */
+
 
 });
 
@@ -181,3 +187,11 @@ const stringToQuery = parameters =>
     Object.keys(parameters).map(key => 
         key + '=' + parameters[key])
         .join('&');
+
+const formatPrice = price =>
+    price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+const checkRating = rating =>
+    !isNaN(rating) ? rating.toFixed(1)  : "-";
+
+
