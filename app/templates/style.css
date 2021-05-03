@@ -1,6 +1,8 @@
 body {
     background-color: rgb(58, 58, 58)
 }
+
+
 .header {
     width: 100%;
     height: 100px;
@@ -72,16 +74,30 @@ body {
 .card-results {
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
     transition: 0.3s;
+    padding: 30px;
+	max-width: 250px;
+    width: 50%;
+    margin: 0 auto;
+
 }
 .package-container {
     color: #ffffff;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
     transition: 0.3s;
-    padding: 2px 16px;
+    padding: 15px 30px;
     background-image: linear-gradient(#656666, #3e4b49);
 
 }
-.package-container > {
-    display:inline-block;
+.package-container h2 {
+    opacity: 0.6;
+    margin: 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    
+}
 
+.package-container p {
+    font-size: 20px;
+	letter-spacing: 1px;
+	margin: 10px 0;
 }

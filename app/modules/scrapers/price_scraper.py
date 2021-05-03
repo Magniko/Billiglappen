@@ -18,6 +18,7 @@ from app.modules.database_module.db import (
     update_basic_course,
     update_administration,
 )
+from app.modules.error_handler.error_handler import scraping_error
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -85,8 +86,7 @@ def main(school=None):
     for t in t_list:
         t.join(60)
         if t.is_alive():
-            logging.debug("%s timed out...", t.name)
-
+            scraping_error(2, [t.name])
     return 0
 
 
@@ -94,11 +94,16 @@ def scrape_light_classes(class_):
     logging.debug("Starting scraping of %s, %s...", class_.price_url, class_.name)
 
     url = format_url(class_.price_url)
-    r = urllib.request.urlopen(url)
+
+    tree = None
+
     try:
+        r = urllib.request.urlopen(url)
         tree = lxml.html.fromstring(r.read())
+        r.close()
+        
     except:
-        error_handler(5, [url])
+        return scraping_error(3, [url])
 
     with_naf = False
     naf_fee = 1300
@@ -137,7 +142,7 @@ def scrape_light_classes(class_):
                 price = int(re.sub("[^0-9]", "", price_xpath))
 
             else:
-                if "_DIV" in price_xpath:
+                if "_DIV_" in price_xpath:
                     div = int(price_xpath.split("_DIV_")[-1])
                     price_xpath = price_xpath.split("_DIV_")[0]
                 if "_WITH_NAF" in price_xpath:
@@ -150,17 +155,13 @@ def scrape_light_classes(class_):
                 xpath = price_xpath.split()
                 e_info = (url, class_._fields[i])
 
+                price = (
+                        sum([parse_xpath(xp, tree, e_info, from_front) for xp in xpath])
+                        / div
+                )
+
                 if with_naf and class_._fields[i] == "track_xpath":
-                    price = (
-                        sum([parse_xpath(xp, tree, e_info, from_front) for xp in xpath])
-                        / div
-                        - naf_fee
-                    )
-                else:
-                    price = (
-                        sum([parse_xpath(xp, tree, e_info, from_front) for xp in xpath])
-                        / div
-                    )
+                    price -= naf_fee
 
         else:
             price = 0
@@ -243,7 +244,7 @@ def scrape_light_classes(class_):
     if msg == 1:
         logging.debug("Added new row of class %s to %s.", class_.type, class_.name)
     elif msg == 2:
-        logging.debug("Updated price of class  %s for %s.", class_.type, class_.name)
+        logging.debug("UPDATED price of class  %s for %s.", class_.type, class_.name)
     elif msg == -1:
         logging.debug(
             "Error, scraper got an illegal value. Class %s for %s.",
@@ -260,11 +261,16 @@ def scrape_tg(school):
 
     url = format_url(school.price_url)
 
-    r = urllib.request.urlopen(url)
+    tree = None
+
     try:
+        r = urllib.request.urlopen(url)
         tree = lxml.html.fromstring(r.read())
+        r.close()
+
     except:
-        error_handler(5, [url])
+        return scraping_error(3, [url])
+
 
     keys = (
         "tg_package_price",
@@ -333,7 +339,7 @@ def scrape_tg(school):
     if msg == 1:
         logging.debug("Added TG-course prices to %s.", school.id)
     elif msg == 2:
-        logging.debug("Updated prices of TG-courses for %s.", school.id)
+        logging.debug("UPDATED prices of TG-courses for %s.", school.id)
     elif msg == -1:
         logging.debug(
             "Error, scraper got an illegal value. TG-courses for %s", school.id
@@ -351,25 +357,37 @@ def scrape_administration_prices():
 
     url_naf = df["naf_url"].item()
 
-    url_vegvesen = df["vegvesen_url"].item()
+    tree = None
 
-    r = urllib.request.urlopen(url_naf)
     try:
+        r = urllib.request.urlopen(url_naf)
         tree = lxml.html.fromstring(r.read())
+        r.close()
+        
     except:
-        error_handler(5, [url])
+        return scraping_error(3, [url_naf])
 
     keys = ("naf", "test_b", "theory_test", "issuance", "photo", "test_mc", "test_be")
 
     prices = dict.fromkeys(keys)
 
     prices["naf"] = parse_xpath(df["naf_xpath"].item(), tree, (url_naf, "naf_xpath"))
+    
 
-    r = urllib.request.urlopen(url_vegvesen)
+
+
+
+    url_vegvesen = df["vegvesen_url"].item()
+
+    tree = None
+
     try:
+        r = urllib.request.urlopen(url_vegvesen)
         tree = lxml.html.fromstring(r.read())
+        r.close()
+        
     except:
-        error_handler(5, [url])
+        return scraping_error(3, [url_vegvesen])
 
     for i in df.columns[3:]:
         prices[i.replace("_xpath", "")] = parse_xpath(
@@ -381,7 +399,7 @@ def scrape_administration_prices():
     if msg == 1:
         logging.debug("Added prices for NAF and Vegvesen fees")
     elif msg == 2:
-        logging.debug("Updated prices for NAF and Vegvesen fees.")
+        logging.debug("UPDATED prices for NAF and Vegvesen fees.")
     elif msg == -1:
         logging.debug("Error, scraper got an illegal value. Fees of NAF and Vegvesen")
     else:
@@ -395,12 +413,12 @@ def parse_xpath(xpath, tree, e_info, front=False):
     try:
         element = tree.xpath(xpath)
         if len(element) == 0:
-            error_handler(0, e_info)
+            scraping_error(0, e_info)
             return float("inf")
         element = element[0].text.lower()
 
     except lxml.etree.XPathEvalError as e:
-        error_handler(0, e_info)
+        scraping_error(0, e_info)
         return float("inf")
 
     element = re.sub(r"(?<=\d) (?=\d)|(^[^\d]+|(?<=\d)[^\d]+$)", "", element).split("+")
@@ -409,7 +427,7 @@ def parse_xpath(xpath, tree, e_info, front=False):
         el = re.sub(r"\D+$", "", el)
 
         if not (any(i.isdigit() for i in el)):
-            error_handler(1, e_info)
+            scraping_error(1, e_info)
             return float("inf")
 
         if front:
@@ -430,25 +448,5 @@ def format_url(url):
     return url
 
 
-def error_handler(e, e_info):
-    errors = [
-        "Scraping Error. XPath does not exist in the HTML document.",
-        "Numerical Error. The XPath points to a string, not a number.",
-        "Timeout Error. The scraping thread timed out in an attempt to load or scrape the page. Page could be down.",
-        "Error. Traceback provided.",
-    ]
-    if len(e_info) == 2:
-        logging.debug(
-            "Error message %d at %s for XPath in %s.", e, e_info[0], e_info[1]
-        )
-        logging.debug(errors[e])
-    elif len(e_info) == 1:
-        logging.debug("Error message %d at %s.", e, e_info)
-        logging.debug(errors[e])
-    else:
-        logging.debug("Python error. %s", errors[e])
-    return
-
-
 if __name__ == "__main__":
-    Main()
+    main()

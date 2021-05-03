@@ -1,7 +1,9 @@
 import os
 import math
 import sqlite3
+import logging
 from datetime import datetime
+from app.modules.error_handler.error_handler import price_change
 
 
 PATH = "app/database/"
@@ -259,10 +261,18 @@ def update_class(ids, prices):
 
     # insert row
     if len(class_prices) == 0:
+        logging.debug("Creating new light class-row for %s.", class_id)
+
         new_prices = tuple(prices.values())
 
-        query = f"""INSERT INTO light_class ( class_id, driving_school_id, class, {', '.join(keys_package)}, last_updated)
-			VALUES({', '.join(f'"{i}"' for i in ids)}, {', '.join([str(i) if i != float("inf") else "0" for i in new_prices])}, {date});"""
+        query = f"""INSERT INTO light_class ( 
+            class_id, 
+            driving_school_id, 
+            class, {', '.join(keys_package)}, 
+            last_updated)
+		VALUES({', '.join(f'"{i}"' for i in ids)}, {', '.join([str(i) if i != float("inf") else "0" for i in new_prices])}, {date});"""
+
+        logging.debug("Query: \n%s", query)
 
         cursor.execute(query)
 
@@ -290,15 +300,20 @@ def update_class(ids, prices):
                     > float(prices[prices_k]) / float(current_prices[current_k])
                     < 0.75
                 ):
-                    print("Too big variance. This message is a placeholder.")
-                    # price_variance(prices_k, prices[prices_k], ids[0], "LIGHT_CLASSES")
+                    diff = float(prices[prices_k]) / float(current_prices[current_k])
+                    price_change(prices_k, prices[prices_k], ids[0], "LIGHT_CLASS", diff)
                 else:
                     statements.append(f"{current_k} = {prices[prices_k]}")
 
         if len(statements) > 0:
+            logging.debug("Updating light class-row for %s.", class_id)
+
             query = f"""UPDATE light_class
 			SET {', '.join(statements)}, last_updated = {date}
 			WHERE class_id = "{class_id}";"""
+
+            logging.debug("Query: \n%s", query)
+
 
             cursor.execute(query)
 
@@ -346,6 +361,9 @@ def update_basic_course(school_id, prices):
 
     # insert row
     if len(basic_course_prices) == 0:
+
+        logging.debug("Creating new TG-row for %s.", school_id)
+
         new_prices = tuple(prices.values())
 
         query = f"""INSERT INTO basic_course ( 
@@ -360,6 +378,8 @@ def update_basic_course(school_id, prices):
 	  			last_updated)
 			VALUES('{school_id}', {', '.join([str(i) if i != float("inf") else "0" for i in new_prices])}, {date});"""
 
+        logging.debug("Query: \n%s", query)
+
         cursor.execute(query)
 
         cursor = db.cursor()
@@ -370,7 +390,6 @@ def update_basic_course(school_id, prices):
 
     # update row
     else:
-
         current_prices = basic_course_prices
 
         statements = []
@@ -388,15 +407,20 @@ def update_basic_course(school_id, prices):
                     > float(prices[prices_k]) / float(current_prices[current_k])
                     < 0.75
                 ):
-                    print("Too big variance. This message is a placeholder.")
-                    # price_variance(prices_k, prices[prices_k], school_id, "BASIC_COURSE")
+                    diff = float(prices[prices_k]) / float(current_prices[current_k])
+                    price_change(prices_k, prices[prices_k], school_id, "BASIC_COURSE", diff)
                 else:
                     statements.append(f"{current_k} = {prices[prices_k]}")
 
         if len(statements) > 0:
+            logging.debug("Updating TG-row for %s.", school_id)
+
             query = f"""UPDATE basic_course
 			SET {', '.join(statements)}, last_updated = {date}
 			WHERE driving_school_id = "{school_id}";"""
+
+            logging.debug("Query: \n%s", query)
+
 
             cursor.execute(query)
 
@@ -424,6 +448,8 @@ def update_administration(prices):
     if len(admin_prices) == 0:
         new_prices = tuple(prices.values())
 
+        logging.debug("Creating row for administration prices")
+
         query = f"""INSERT INTO administration( 
 			naf_fee,
 			drive_test_fee,
@@ -435,6 +461,8 @@ def update_administration(prices):
 			last_updated )
 			VALUES({', '.join([str(i) for i in new_prices])}, {date});"""
 
+        logging.debug("Query: \n%s", query)
+
         cursor.execute(query)
 
         cursor = db.cursor()
@@ -445,6 +473,8 @@ def update_administration(prices):
 
     # update row
     else:
+
+
 
         current_prices = admin_prices
 
@@ -464,15 +494,20 @@ def update_administration(prices):
                     > float(prices[prices_k]) / float(current_prices[current_k])
                     < 0.75
                 ):
-                    print("Too big variance. This message is a placeholder.")
-                    # price_variance(prices_k, prices[prices_k], "administration", "ADMINISTRATION")
+                    diff = float(prices[prices_k]) / float(current_prices[current_k])
+                    price_variance(prices_k, prices[prices_k], "administration", "ADMINISTRATION", diff)
 
                 else:
                     statements.append(f"{current_k} = {prices[prices_k]}")
 
         if len(statements) > 0:
+            logging.debug("Updating row for administration prices")
+
             query = f"""UPDATE administration
 			SET {', '.join(statements)}, last_updated = {date};"""
+
+            logging.debug("Query: \n%s", query)
+
 
             cursor.execute(query)
 

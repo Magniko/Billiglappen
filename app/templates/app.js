@@ -144,18 +144,49 @@ form.addEventListener('submit', event => {
 
         const html = data.map(pack => `
             <div class="package-container">
-                <h4><b>${pack.name}</b></h4>
-                <div class="total-price">
-                    <p><b>Totalpris:</b> ${formatPrice(pack.total_price)},-</p>
+                <div class="package-header">
+                    <div class="school-name">
+                        <h2><b>${pack.name}</b></h2>
+                    </div>
+                    <div class="total-price">
+                        <p><b>Totalpris:</b> <span>${formatPrice(pack.total_price)},-</span></p>
+                    </div>
+                    <div class="lessons-included">
+                        <p><b>Kjøretimer inkludert:</b> <span>${pack.n_lessons}</span></p>
+                    </div>
+                    <div class="distance">
+                        <p><b>Avstand:</b> <span>${pack.distance.toFixed(2)}km</span></p>
+                    </div>
+                    <div class="rating">
+                        <p><b>Vurdering:</b> <span>${checkRating(pack.rating)}</span></p>
+                    </div>
                 </div>
-                <div class="lessons-included">
-                    <p><b>Kjøretimer inkludert:</b> ${pack.n_lessons}</p>
-                </div>
-                <div class="distance">
-                    <p><b>Avstand:</b> ${pack.distance.toFixed(2)}km</p>
-                </div>
-                <div class="rating">
-                    <p><b>Vurdering:</b> ${checkRating(pack.rating)}</p>
+
+                <div class="package-details">
+                    <div class="lesson-price">
+                        <p>Kjøretime: <span>${formatPrice(pack.lesson_price)},-</span></p>
+                    </div>
+                    <div class="evaluation-price">
+                        <p>Trinnvurderingstime: <span>${formatPrice(pack.evaluation_price)},-</span></p>
+                    </div>
+                    <div class="track-price">
+                        <p>Sikkerhetskurs på bane: <span>${formatPrice(pack.safety_track_price)},-</span></p>
+                    </div>
+                    <div class="road-price">
+                        <p>Sikkerhetskurs på vei: <span>${formatPrice(pack.safety_road_price)},-</span></p>
+                    </div>
+                    <div class="test-price">
+                        <p>Oppkjøring: <span>${formatPrice(pack.drive_test_price)},-</span></p>
+                    </div>
+                    <div class="other-price">
+                        <p>Tilleggskostnader: <span>${formatPrice((pack.other_price + pack.hidden_price))},-</span></p>
+                    </div>
+                    <div class="discount">
+                        <p>Rabatt: <span>${formatPrice(pack.discount)},-</span></p>
+                    </div>
+                    <div class="updated">
+                        <p>Sist oppdatert: <span>${pack.last_updated}</span></p>
+                    </div>
                 </div>
             </div>`)
             .join("");
