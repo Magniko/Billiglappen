@@ -1,7 +1,7 @@
 "use strict"
 
 
-const tgButton = document.querySelector("#tg-course-button");
+const lightClassButton = document.querySelector("#light-class-button");
 
 const formLightClasses = document.querySelector("#light-classes-form");
 const formTg = document.querySelector("#form-tg");
@@ -30,10 +30,9 @@ let latitude;
 let longitude;
 
 
-
-tgButton.addEventListener("click", event => {
-    window.location.href = "trafikaltgrunnkurs";
-})
+lightClassButton.addEventListener("click", event => {
+    window.location.href = "/";
+}) 
 
 
 
@@ -118,33 +117,28 @@ document.addEventListener("change", async event => {
 });
 
 
-formLightClasses.addEventListener('submit', event => {
+
+formTg.addEventListener('submit', event => {
     event.preventDefault();
 
     cardResults.innerHTML = "";
 
-    const package_class = lightClassSelector.value;
-
     const lat = latitude;
     const long =  longitude;
 
-    const n = lessonSlider.value;
-
     const distance = distanceSlider.value;
     
-    let adminPrices = false;
-    if(hasAdminPrices.checked == true)
-        adminPrices = true;
+    let over25 = false;
+    if(hasOver25.checked == true)
+        over25 = true;
 
 
-    let url = "https://api-billiglappen.herokuapp.com/light_classes"
+    let url = "https://api-billiglappen.herokuapp.com/trafikalt_grunnkurs"
     const parameters = {
-        "class_": package_class,
-        "n" : n,
         "threshold": distance,
         "lat": lat,
         "long_": long,
-        "include_admin_fees": adminPrices
+        "over_25": over25
     }
     url = `${url}?${stringToQuery(parameters)}`;
 
@@ -168,10 +162,7 @@ formLightClasses.addEventListener('submit', event => {
                             <h2><b>${pack.name}</b></h2>
                         </div>
                         <div class="total-price">
-                            <p><b>Totalpris:</b> <span>${formatPrice(pack.total_price)},-</span></p>
-                        </div>
-                        <div class="lessons-included">
-                            <p><b>Kjøretimer inkludert:</b> <span>${pack.n_lessons}</span></p>
+                            <p><b>Totalpris:</b> <span>${formatPrice(pack.tg_package_price)},-</span></p>
                         </div>
                         <div class="distance">
                             <p><b>Avstand:</b> <span>${pack.distance.toFixed(2)}km</span></p>
@@ -180,28 +171,19 @@ formLightClasses.addEventListener('submit', event => {
                             <p><b>Vurdering:</b> <span>${checkRating(pack.rating)}</span></p>
                         </div>
                         <div class="homepage">
-                            <a href="http://${pack.website}">Skolens NIGGEEEER nettside</a>
+                            <a href="http://${pack.website}">Skolens nettside</a>
                         </div>
                     </div>
 
                     <div class="package-details">
-                        <div class="lesson-price">
-                            <p>Kjøretime: <span>${formatPrice(pack.lesson_price)},-</span></p>
+                        <div class="basic-price">
+                            <p>Trafikalt Grunnkurs: <span>${formatPrice(pack.theory_price)},-</span></p>
                         </div>
-                        <div class="evaluation-price">
-                            <p>Trinnvurderingstime: <span>${formatPrice(pack.evaluation_price)},-</span></p>
+                        <div class="firstaid-price">
+                            <p>Førstehjelp: <span>${formatPrice(pack.first_aid_price)},-</span></p>
                         </div>
-                        <div class="track-price">
-                            <p>Sikkerhetskurs på bane: <span>${formatPrice(pack.safety_track_price)},-</span></p>
-                        </div>
-                        <div class="road-price">
-                            <p>Sikkerhetskurs på vei: <span>${formatPrice(pack.safety_road_price)},-</span></p>
-                        </div>
-                        <div class="test-price">
-                            <p>Oppkjøring: <span>${formatPrice(pack.drive_test_price)},-</span></p>
-                        </div>
-                        <div class="other-price">
-                            <p>Tilleggskostnader: <span>${formatPrice((pack.other_price + pack.hidden_price))},-</span></p>
+                        <div class="night-price">
+                            <p>Mørkekjøring: <span>${formatPrice(pack.night_driving_price)},-</span></p>
                         </div>
                         <div class="discount">
                             <p>Rabatt: <span>${formatPrice(pack.discount)},-</span></p>
@@ -231,15 +213,6 @@ formLightClasses.addEventListener('submit', event => {
 
 
 
-lessonSlider.addEventListener("input", event =>{
-    rangeValue.innerHTML = lessonSlider.value;
-
-    //TODO: dynaimcally change total price depending on amount of lessons
-/*     let totalPrice = 
-    totalPrices.innerHTML =  */
-
-
-});
 
 distanceSlider.addEventListener("input", event =>{
     distanceValue.value = distanceSlider.value;

@@ -5,21 +5,23 @@ from pydantic import BaseModel, BaseConfig, validator
 from app.modules.database_module.db import (
     get_all_driving_schools,
     get_driving_school,
-    get_class_prices,
-    get_basic_course_prices,
     get_administration_prices,
 )
 import haversine as hs
 import os
 import json
+import threading
+from app.modules.utils.utils import set_light_class_price, set_tg_price
 
 
 classes = {"B", "Ba", "B96", "BE", "A", "A1", "A2", "AM146", "AM147"}
 
 
-app = FastAPI()
+app = FastAPI(  title="Billiglappen.no API",
+                description="An API which allows users to query for the total price of nearby driving school packages, and compare them.",
+                version="0.1",
+            )
 
-API_KEY = os.environ["API_KEY"]
 
 # configuring headers for CORS
 app.add_middleware(
@@ -40,7 +42,7 @@ def endpoint_class_prices(
     include_admin_fees: bool = False,
 ):
     if class_ not in classes:
-        raise ValueError("Class type is not valid")
+        raise HTTPException(status_code=400, detail="Class type is not valid")
 
     driving_schools = [
         school
@@ -49,56 +51,26 @@ def endpoint_class_prices(
         < threshold
     ]
 
-    result_driving_schools = []
-
-    base_url = "https://maps.googleapis.com/maps/api/distancematrix/json"
 
     if include_admin_fees == True:
         admin_fees = sum(get_administration_prices(class_).values())
 
+
+
+    result_driving_schools = []
+
+    print(len(driving_schools))
+
+    t_list = []
+
     for school in driving_schools:
-        params = parse.urlencode(
-            {
-                "units": "metric",
-                "origins": f"{lat},{long_}",
-                "destinations": f"place_id:{school['place_id']}",
-                "key": API_KEY,
-            }
-        )
-        url = f"{base_url}?{params}"
-        try:
-            r = request.urlopen(url)
-            data = json.load(r)
+        t = threading.Thread(target=set_light_class_price, args=(school, class_, threshold, n, lat, long_, include_admin_fees, result_driving_schools, ), daemon=True)
+        t_list.append(t)
+        t.start()
 
-            distance = float(data["rows"][0]["elements"][0]["distance"]["value"]) / 1000
 
-            class_id = f"{school['id']}_{class_}".lower()
-            if distance < threshold:
-                school["distance"] = distance
-                class_prices = get_class_prices(class_id)
-                if len(class_prices) != 0:
-                    school = dict(school, **class_prices)
-                    if n < school["n_lessons"]:
-                        n = school["n_lessons"]
-
-                    school["total_price"] = (
-                        school["lesson_price"] * n
-                        + school["evaluation_price"] * 2
-                        + school["safety_track_price"]
-                        + school["safety_road_price"]
-                        + school["drive_test_price"]
-                        + school["other_price"]
-                        + school["hidden_price"]
-                        - school["discount"]
-                    )
-
-                    if school["total_price"] != 0:
-                        if include_admin_fees == True:
-                            school["total_price"] += admin_fees
-                        result_driving_schools.append(school)
-
-        except error.URLError as e:
-            raise URLError(e)
+    for t in t_list:
+        t.join(5)
 
     return sorted(result_driving_schools, key=lambda i: i["total_price"])
 
@@ -116,44 +88,16 @@ def endpoint_class_prices(
     ]
 
     result_driving_schools = []
-
-    base_url = "https://maps.googleapis.com/maps/api/distancematrix/json"
+    t_list = []
 
     for school in driving_schools:
-        params = parse.urlencode(
-            {
-                "units": "metric",
-                "origins": f"{lat},{long_}",
-                "destinations": f"place_id:{school['place_id']}",
-                "key": API_KEY,
-            }
-        )
-        url = f"{base_url}?{params}"
-        try:
-            r = request.urlopen(url)
-            data = json.load(r)
+        t = threading.Thread(target=set_tg_price, args=(school, threshold, lat, long_, over_25, result_driving_schools, ), daemon=True)
+        t_list.append(t)
+        t.start()
 
-            distance = float(data["rows"][0]["elements"][0]["distance"]["value"]) / 1000
-            if distance < threshold:
-                school["distance"] = distance
-                basic_course_prices = get_basic_course_prices(school["id"])
-                if len(basic_course_prices) != 0:
-                    school = dict(school, **basic_course_prices)
 
-                    if over_25 == True:
-                        school["tg_package_price"] = (
-                            school["first_aid_price"] + school["night_driving_price"]
-                        )
-
-                    if school["tg_package_price"] != 0:
-                        result_driving_schools.append(school)
-
-        except error.URLError as e:
-            raise URLError(e)
-
-        # except Exception as e:
-        # 	print("Error")
-        # error handling module
+    for t in t_list:
+        t.join(1)
 
     return sorted(result_driving_schools, key=lambda i: i["tg_package_price"])
 

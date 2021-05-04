@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Billiglappen.no</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',    filename='style.css') }}" /> 
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300&display=swap" rel="stylesheet">  
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300&family=Jomhuria&family=Overpass:wght@300&display=swap" rel="stylesheet"></head>
+  <body>
+<div class="header">
+    <div class="logo-container">
+        <img src="{{ url_for('static',    filename='img/billiglappen.jpg') }}" alt="Billiglappen.no logo">
+        <h1>Billiglappen.no</h1>
+    </div>
+    <div class="type-selection">
+        <button id="light-class-button">Lette Klasser</button>
+        <button id="tg-course-button">Trafikalt Grunnkurs</button>
+
+    </div>
+    <div class="links">
+        <a href="about">Om Billiglappen.no</a>
+        <a href="contact">Kontakt</a>
+    </div>
+</div>
+<div class="anchor">
+    <div class="content">
+        <h1>Kommer snart!</h1>
+    </div>
+</div>
+</body>
+</html>
+
+<script type="text/javascript">
+"use strict"
+
+const lightClassButton = document.querySelector("#light-class-button");
+const tgButton = document.querySelector("#tg-course-button");
+
+    
+lightClassButton.addEventListener("click", event => {
+    window.location.href = "/";
+}) 
+    
+tgButton.addEventListener("click", event => {
+    window.location.href = "trafikaltgrunnkurs";
+})
+</script>
+  
