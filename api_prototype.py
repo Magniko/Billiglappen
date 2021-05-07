@@ -4,8 +4,10 @@ from urllib import request, error, parse
 from pydantic import BaseModel, BaseConfig, validator
 from app.modules.database_module.db import (
     get_all_driving_schools,
+    get_class_prices,
     get_driving_school,
     get_administration_prices,
+    get_classes_of_driving_school
 )
 import haversine as hs
 import os

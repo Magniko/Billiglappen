@@ -262,7 +262,8 @@ def get_classes_of_driving_school(school_id):
     if len(results) == 0:
         return []
     else:
-        return results[0]
+        return [i for sublist in results for i in sublist]
+
 
 
 
