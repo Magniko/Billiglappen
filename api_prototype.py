@@ -116,7 +116,8 @@ def endpoint_get_class_prices(class_id: str):
         return {"Class not found."}
 
 @app.get("/get_classes_of_driving_school")
-def endpoint_get_classes_of_driving_school():
+def endpoint_get_classes_of_driving_school(school_id: str):
+    return get_classes_of_driving_school(school_id):
 
 
 
