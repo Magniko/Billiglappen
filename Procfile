@@ -1,1 +1,1 @@
-web: uvicorn api_prototype:app --host 0.0.0.0 --port=${PORT:-5000} & gunicorn -b 0.0.0.0:8000 -w 2 main:app
+web: uvicorn api_prototype:app --host 0.0.0.0 --port=${PORT:-5000}
