@@ -67,7 +67,7 @@ def main(school=None):
 
     df = df.append(frames, ignore_index=True)
 
-    tg = pd.read_csv(os.path.join(data_path, "tg_driving_schools_asker.csv"))
+    tg = pd.read_csv(os.path.join(data_path, "tg_driving_schools.csv"))
 
     t_list = []
 
@@ -129,6 +129,9 @@ def scrape_light_classes(class_):
 
     mc_upgrade_prices = dict.fromkeys(mc_upgrade_keys)
 
+    class_id = f"{class_.id}_{class_.type.lower()}"
+
+
     for i in range(5, len(class_) - 3):
         price = 0
 
@@ -153,7 +156,7 @@ def scrape_light_classes(class_):
                     price_xpath = price_xpath.replace("_FRONT", "")
 
                 xpath = price_xpath.split()
-                e_info = (url, class_._fields[i])
+                e_info = (class_id, class_._fields[i])
 
                 price = (
                         sum([parse_xpath(xp, tree, e_info, from_front) for xp in xpath])
@@ -236,7 +239,6 @@ def scrape_light_classes(class_):
     prices["discount"] = discount
     prices["n_lessons"] = class_.n_lessons
 
-    class_id = f"{class_.id}_{class_.type.lower()}"
     ids = [class_id, class_.id, class_.type]
 
     msg = update_class(ids, prices)

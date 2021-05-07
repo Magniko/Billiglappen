@@ -11,7 +11,7 @@ import haversine as hs
 import os
 import json
 import threading
-from app.modules.utils.utils import set_light_class_price, set_tg_price
+from app.modules.utils.utils import set_light_class_price, set_tg_price, get_class_prices
 
 
 classes = {"B", "Ba", "B96", "BE", "A", "A1", "A2", "AM146", "AM147"}
@@ -19,7 +19,7 @@ classes = {"B", "Ba", "B96", "BE", "A", "A1", "A2", "AM146", "AM147"}
 
 app = FastAPI(  title="Billiglappen.no API",
                 description="An API which allows users to query for the total price of nearby driving school packages, and compare them.",
-                version="0.1",
+                version="0.2",
             )
 
 
@@ -105,6 +105,21 @@ def endpoint_class_prices(
 @app.get("/naf_vegvesen_gebyrer")
 def endpoint_administration_prices():
     return get_administration_prices()
+
+@app.get("/get_class_prices")
+def endpoint_get_class_prices(class_id: str):
+    prices = get_class_prices(class_id)
+
+    if len(prices) != 0:
+        return prices
+    else:
+        return {"Class not found."}
+
+@app.get("/get_classes_of_driving_school")
+def endpoint_get_classes_of_driving_school():
+
+
+
 
 
 @app.post("/submit_rating")

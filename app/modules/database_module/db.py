@@ -209,13 +209,13 @@ def get_all_driving_schools():
     return [dict(zip(keys_school, i)) for i in cursor.fetchall()]
 
 
-def get_driving_school(id_):
+def get_driving_school(school_id):
 
     db = sqlite3.connect(os.path.join(PATH, "billiglappen.db"))
 
     cursor = db.cursor()
 
-    cursor.execute("SELECT * FROM driving_school WHERE driving_school_id=?", (id_,))
+    cursor.execute("SELECT * FROM driving_school WHERE driving_school_id=?", (school_id,))
 
     results = cursor.fetchall()
 
@@ -245,6 +245,25 @@ def get_class_prices(class_id):
         return []
     else:
         return [dict(zip(new_keys, i)) for i in results][0]
+
+
+def get_classes_of_driving_school(school_id):
+    db = sqlite3.connect(os.path.join(PATH, "billiglappen.db"))
+
+    cursor = db.cursor()
+
+    query = f"""SELECT class
+    FROM light_class WHERE driving_school_id="{school_id}";"""
+
+    cursor.execute(query)
+
+    results = cursor.fetchall()
+
+    if len(results) == 0:
+        return []
+    else:
+        return results[0]
+
 
 
 def update_class(ids, prices):
@@ -300,10 +319,10 @@ def update_class(ids, prices):
                     > float(prices[prices_k]) / float(current_prices[current_k])
                     < 0.75
                 ):
-                    diff = float(prices[prices_k]) / float(current_prices[current_k])
-                    price_change(prices_k, prices[prices_k], ids[0], "LIGHT_CLASS", diff)
-                else:
-                    statements.append(f"{current_k} = {prices[prices_k]}")
+                    diff = float(prices[prices_k]) / float(current_prices[current_k])*100
+                    price_change(prices_k, prices[prices_k], current_prices[current_k] ids[0], "LIGHT_CLASS", diff)
+
+                statements.append(f"{current_k} = {prices[prices_k]}")
 
         if len(statements) > 0:
             logging.debug("Updating light class-row for %s.", class_id)
@@ -407,10 +426,10 @@ def update_basic_course(school_id, prices):
                     > float(prices[prices_k]) / float(current_prices[current_k])
                     < 0.75
                 ):
-                    diff = float(prices[prices_k]) / float(current_prices[current_k])
-                    price_change(prices_k, prices[prices_k], school_id, "BASIC_COURSE", diff)
-                else:
-                    statements.append(f"{current_k} = {prices[prices_k]}")
+                    diff = float(prices[prices_k]) / float(current_prices[current_k])*100
+                    price_change(prices_k, prices[prices_k], current_prices[current_k], school_id, "BASIC_COURSE", diff)
+
+                statements.append(f"{current_k} = {prices[prices_k]}")
 
         if len(statements) > 0:
             logging.debug("Updating TG-row for %s.", school_id)
@@ -494,11 +513,11 @@ def update_administration(prices):
                     > float(prices[prices_k]) / float(current_prices[current_k])
                     < 0.75
                 ):
-                    diff = float(prices[prices_k]) / float(current_prices[current_k])
-                    price_variance(prices_k, prices[prices_k], "administration", "ADMINISTRATION", diff)
+                    diff = float(prices[prices_k]) / float(current_prices[current_k])*100
+                    price_change(prices_k, prices[prices_k], current_prices[current_k], "administration", "ADMINISTRATION", diff)
 
-                else:
-                    statements.append(f"{current_k} = {prices[prices_k]}")
+                
+                statements.append(f"{current_k} = {prices[prices_k]}")
 
         if len(statements) > 0:
             logging.debug("Updating row for administration prices")

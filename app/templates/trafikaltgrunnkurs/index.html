@@ -2,10 +2,10 @@
 <html>
   <head>
     <title>Billiglappen.no</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static',    filename='style.css') }}" /> 
+    <link rel="stylesheet" type="text/css" href="../style.css" /> 
     <meta charset="UTF-8">
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <link rel="shortcut icon" href="img/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300&display=swap" rel="stylesheet">  
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300&family=Jomhuria&family=Overpass:wght@300&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
 <body>
     <div class="header">
         <div class="logo-container">
-            <img src="{{ url_for('static',    filename='img/billiglappen.jpg') }}" alt="Billiglappen.no logo">
+            <img src="../img/billiglappen.jpg" alt="Billiglappen.no logo">
             <h1>Billiglappen.no</h1>
         </div>
         <div class="type-selection">
@@ -58,5 +58,5 @@
     </div>
 </body>
 
-<script src="{{ url_for('static',    filename='trafikaltgrunnkurs/app.js') }}"></script>
+<script src="app.js"></script>
 </html>

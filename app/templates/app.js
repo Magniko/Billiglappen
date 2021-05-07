@@ -87,6 +87,7 @@ positionSearch.addEventListener("input", () => {
 document.addEventListener("change", async event => {
     event.preventDefault();
 
+
     if (event.target && event.target.id == "position-search") {
         const coordinates = suggestionList.options[0].dataset.value;
         
@@ -118,12 +119,31 @@ document.addEventListener("change", async event => {
 });
 
 
+
+document.addEventListener("click", event => {
+
+    console.log(event.target);
+
+});
+
+/* packageHeader[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    let content = this.nextElementSibling;
+    if (content.style.display === "block") {
+      content.style.display = "none";
+    } else {
+      content.style.display = "block";
+    }
+  });
+} */
+
 formLightClasses.addEventListener('submit', event => {
     event.preventDefault();
 
-    cardResults.innerHTML = "";
+    cardResults.innerHTML = `<div class="loading"><img src=img/loading_spinner.gif></div`;
 
     const package_class = lightClassSelector.value;
+    
 
     const lat = latitude;
     const long =  longitude;
@@ -180,7 +200,7 @@ formLightClasses.addEventListener('submit', event => {
                             <p><b>Vurdering:</b> <span>${checkRating(pack.rating)}</span></p>
                         </div>
                         <div class="homepage">
-                            <a href="http://${pack.website}">Skolens NIGGEEEER nettside</a>
+                            <a href="http://${pack.website}">Skolens nettside</a>
                         </div>
                     </div>
 
@@ -256,5 +276,3 @@ const formatPrice = price =>
 
 const checkRating = rating =>
     !isNaN(rating) ? rating.toFixed(1)  : "-";
-
-

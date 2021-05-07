@@ -49,6 +49,8 @@ body {
     font-weight: bold;
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);
+    color: rgb(255, 255, 255);
+
 }
 
 .anchor {
@@ -68,6 +70,7 @@ body {
     color: #ffffff;
     text-transform: uppercase;
     font-size: 18px;
+    cursor: pointer;
 
 }
 
@@ -77,13 +80,13 @@ body {
     border: 2px solid #ccc;
     padding: 5px;    
     background-color: rgb(82, 81, 81); 
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .form * {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
+
     margin: auto 0;
     padding: 5px;
 }
@@ -152,6 +155,12 @@ body {
     margin: 0 auto;
 }
 
+.loading {
+    display: flex;
+    justify-content: center;
+
+}
+
 .package-container {
 	border-radius: 10px;
 	box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
@@ -169,7 +178,6 @@ body {
     text-transform: uppercase;
     width: 50%;
     margin: auto 0;
-    justify-content: center;
 
 }
 
@@ -178,6 +186,11 @@ body {
     transition: 0.3s;
     width: 40%;
     padding: 15px;
+    cursor: pointer;
+    width: 100%;
+    border: none;
+    outline: none;
+    
 
 }
 .package-header h2 {
@@ -216,6 +229,8 @@ body {
     background-image: linear-gradient(#586666, #6e7a79);
     padding: 1;
     width: 60%;
+    display: none;
+    overflow: hidden;
 }
 
 .package-details p{
@@ -227,4 +242,3 @@ body {
     padding: 10px;
     font-size: 20px;
 }
-
