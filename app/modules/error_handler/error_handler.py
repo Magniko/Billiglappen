@@ -27,7 +27,7 @@ def scraping_error(e, e_info):
     return -1
 
 
-def price_change(column, new_price, current_price id_, table, diff):
+def price_change(column, new_price, current_price, id_, table, diff):
     warning_str = ("WARNING: Price change for %s of %s in %s."  % (column, id_, table),  "Price went from %s to %s or %f%%." % (curent_price, new_price, (diff*100)))
     logging.warning(warning_str)
     send_email(warning_str)

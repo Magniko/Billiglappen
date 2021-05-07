@@ -320,7 +320,7 @@ def update_class(ids, prices):
                     < 0.75
                 ):
                     diff = float(prices[prices_k]) / float(current_prices[current_k])*100
-                    price_change(prices_k, prices[prices_k], current_prices[current_k] ids[0], "LIGHT_CLASS", diff)
+                    price_change(prices_k, prices[prices_k], current_prices[current_k], ids[0], "LIGHT_CLASS", diff)
 
                 statements.append(f"{current_k} = {prices[prices_k]}")
 
