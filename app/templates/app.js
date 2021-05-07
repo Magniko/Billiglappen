@@ -20,6 +20,8 @@ const distanceValue = document.querySelector("#distance-value");
 const hasAdminPrices = document.querySelector("#admin-prices");
 const hasOver25 = document.querySelector("#over-twentyfive");
 
+packageHeader = document.querySelector(".package-header");
+
 const cardResults = document.querySelector(".card-results");
 
 const totalPrices = document.querySelector(".total-price");
@@ -120,9 +122,24 @@ document.addEventListener("change", async event => {
 
 
 
+
 document.addEventListener("click", event => {
 
     console.log(event.target);
+
+});
+
+
+packageHeader.addEventListener("click", event => {
+
+    var body = document.getElementById( 'slide-body' );
+    if( body.className == 'expanded' ) {
+        body.className = '';
+        document.getElementById( 'more' ).textContent = 'more...';
+    } else {
+        body.className = 'expanded';
+        document.getElementById( 'more' ).textContent = 'less...';
+    };
 
 });
 
