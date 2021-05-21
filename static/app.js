@@ -182,7 +182,7 @@ formLightClasses.addEventListener('submit', event => {
         adminPrices = true;
 
 
-    let url = "http://api.billiglappen.no/light_classes"
+    let url = "https://api.billiglappen.no/light_classes"
     const parameters = {
         "class_": package_class,
         "n" : n,

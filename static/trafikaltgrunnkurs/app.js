@@ -133,7 +133,7 @@ formTg.addEventListener('submit', event => {
         over25 = true;
 
 
-    let url = "https://api-billiglappen.herokuapp.com/trafikalt_grunnkurs"
+    let url = "https://api.billiglappen.no/trafikalt_grunnkurs"
     const parameters = {
         "threshold": distance,
         "lat": lat,
