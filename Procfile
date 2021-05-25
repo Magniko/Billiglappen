@@ -1,1 +1,1 @@
-web: init
+web: ./init.sh
