@@ -197,7 +197,7 @@ def scrape_light_classes(class_):
         package_price = int(re.sub("[^0-9]", "", package_price_xpath))
     elif package_price_xpath == "NO_PACK":
         package_price = (
-            prices["evaluation"] * 2 + prices["track"] + prices["road"] + prices["test"]
+            prices["evaluation"] * 2 + prices["track"] + prices["road"] + prices["test"] + prices["other"]
         )
     else:
         if "_NO_TEST" in package_price_xpath:
