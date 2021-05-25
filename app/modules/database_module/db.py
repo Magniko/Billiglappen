@@ -128,74 +128,6 @@ def __database__init__():
     db.commit()
 
 
-def update_school(school_id, school):
-
-    db = sqlite3.connect(os.path.join(PATH, "billiglappen.db"))
-
-    cursor = db.cursor()
-
-    values = (
-        school.id,
-        school.name,
-        school.website,
-        school.address,
-        school.municipality,
-        school.county,
-        school.lat,
-        school.long,
-        school.phone_number,
-        school.rating,
-        school.place_id,
-    )
-
-    driving_school_data = get_driving_school(school_id)
-
-    # insert row
-    if len(driving_school_data) == 0:
-        query = f"""INSERT INTO driving_school(
-				driving_school_id,
-				name, website,
-				address,
-				municipality, 
-				county, 
-				lat, 
-				long, 
-				phone, 
-				rating, 
-				place_id)
-			VALUES({', '.join([f'"{str(i)}"' for i in values])});"""
-        cursor.execute(query)
-
-        cursor = db.cursor()
-
-        db.commit()
-
-        return 1
-
-    # update row
-    else:
-        statements = []
-
-        for (value, current_value_k) in zip(values, driving_school_data.keys()):
-
-            if value != driving_school_data[current_value_k] and not math.isnan(value):
-                statements.append(f"{current_value_k} = {value}")
-
-        if len(statements) > 0:
-            query = f"""UPDATE driving_school
-			SET {', '.join(statements)}
-			WHERE driving_school_id = "{school_id}";"""
-
-            cursor.execute(query)
-
-            cursor = db.cursor()
-
-            db.commit()
-
-            return 2
-
-        else:
-            return 0
 
 
 def get_all_driving_schools():
@@ -225,6 +157,8 @@ def get_driving_school(school_id):
         return [dict(zip(keys_school, i)) for i in results][0]
 
 
+
+
 def get_class_prices(class_id):
 
     db = sqlite3.connect(os.path.join(PATH, "billiglappen.db"))
@@ -247,6 +181,8 @@ def get_class_prices(class_id):
         return [dict(zip(new_keys, i)) for i in results][0]
 
 
+
+
 def get_classes_of_driving_school(school_id):
     db = sqlite3.connect(os.path.join(PATH, "billiglappen.db"))
 
@@ -263,6 +199,144 @@ def get_classes_of_driving_school(school_id):
         return []
     else:
         return [i for sublist in results for i in sublist]
+def get_basic_course_prices(school_id):
+
+    db = sqlite3.connect(os.path.join(PATH, "billiglappen.db"))
+
+    cursor = db.cursor()
+
+    query = f"""SELECT {", ".join(keys_tg)}, last_updated 
+    FROM basic_course WHERE driving_school_id="{school_id}";"""
+
+    cursor.execute(query)
+
+    results = cursor.fetchall()
+
+    new_keys = list(keys_tg)
+    new_keys.append("last_updated")
+
+    if len(results) == 0:
+        return []
+    else:
+        return [dict(zip(new_keys, i)) for i in results][0]
+
+
+
+
+def get_administration_prices(class_=None, with_update=False):
+
+    test = "drive_test_fee"
+
+    if class_ in {"A", "A1", "A2"}:
+        test = "drive_test_fee_mc"
+    elif class_ == "BE":
+        test = "drive_test_fee_be"
+
+    keys_admin = (
+        "naf_fee",
+        test,
+        "theory_test_fee",
+        "issuance_fee",
+        "phote_fee",
+    )
+    if class_ == None:
+        keys_admin = (
+            "naf_fee",
+            "drive_test_fee",
+            "theory_test_fee",
+            "issuance_fee",
+            "phote_fee",
+            "drive_test_fee_mc",
+            "drive_test_fee_be",
+        )
+
+    db = sqlite3.connect(os.path.join(PATH, "billiglappen.db"))
+
+    cursor = db.cursor()
+    query = f"""SELECT {", ".join(keys_admin)} FROM administration;"""
+    if with_update:
+        query = f"""SELECT {", ".join(keys_admin)}, last_updated FROM administration;"""
+
+    cursor.execute(query)
+
+    results = cursor.fetchall()
+
+    if len(results) == 0:
+        return []
+    else:
+        return [dict(zip(keys_admin, i)) for i in results][0]
+
+
+
+
+def update_school(school_id, school):
+
+    db = sqlite3.connect(os.path.join(PATH, "billiglappen.db"))
+
+    cursor = db.cursor()
+
+    values = (
+        school.id,
+        school.name,
+        school.website,
+        school.address,
+        school.municipality,
+        school.county,
+        school.lat,
+        school.long,
+        school.phone_number,
+        school.rating,
+        school.place_id,
+    )
+
+    driving_school_data = get_driving_school(school_id)
+
+    # insert row
+    if len(driving_school_data) == 0:
+        query = f"""INSERT INTO driving_school(
+                driving_school_id,
+                name, website,
+                address,
+                municipality, 
+                county, 
+                lat, 
+                long, 
+                phone, 
+                rating, 
+                place_id)
+            VALUES({', '.join([f'"{str(i)}"' for i in values])});"""
+        cursor.execute(query)
+
+        cursor = db.cursor()
+
+        db.commit()
+
+        return 1
+
+    # update row
+    else:
+        statements = []
+
+        for (value, current_value_k) in zip(values, driving_school_data.keys()):
+
+            if value != driving_school_data[current_value_k] and not math.isnan(value):
+                statements.append(f"{current_value_k} = {value}")
+
+        if len(statements) > 0:
+            query = f"""UPDATE driving_school
+            SET {', '.join(statements)}
+            WHERE driving_school_id = "{school_id}";"""
+
+            cursor.execute(query)
+
+            cursor = db.cursor()
+
+            db.commit()
+
+            return 2
+
+        else:
+            return 0
 
 
 
@@ -316,9 +390,9 @@ def update_class(ids, prices):
             ] != float("inf"):
                 if (
                     float(current_prices[current_k]) != 0
-                    and 2
+                    and 1.3
                     > float(prices[prices_k]) / float(current_prices[current_k])
-                    < 0.75
+                    < 0.7
                 ):
                     diff = float(prices[prices_k]) / float(current_prices[current_k])*100
                     price_change(prices_k, prices[prices_k], current_prices[current_k], ids[0], "LIGHT_CLASS", diff)
@@ -347,26 +421,6 @@ def update_class(ids, prices):
             return 0
 
 
-def get_basic_course_prices(school_id):
-
-    db = sqlite3.connect(os.path.join(PATH, "billiglappen.db"))
-
-    cursor = db.cursor()
-
-    query = f"""SELECT {", ".join(keys_tg)}, last_updated 
-	FROM basic_course WHERE driving_school_id="{school_id}";"""
-
-    cursor.execute(query)
-
-    results = cursor.fetchall()
-
-    new_keys = list(keys_tg)
-    new_keys.append("last_updated")
-
-    if len(results) == 0:
-        return []
-    else:
-        return [dict(zip(new_keys, i)) for i in results][0]
 
 
 def update_basic_course(school_id, prices):
@@ -423,9 +477,9 @@ def update_basic_course(school_id, prices):
 
                 if (
                     float(current_prices[current_k]) != 0
-                    and 2
+                    and 1.3
                     > float(prices[prices_k]) / float(current_prices[current_k])
-                    < 0.75
+                    < 0.7
                 ):
                     diff = float(prices[prices_k]) / float(current_prices[current_k])*100
                     price_change(prices_k, prices[prices_k], current_prices[current_k], school_id, "BASIC_COURSE", diff)
@@ -510,9 +564,9 @@ def update_administration(prices):
 
                 if (
                     float(current_prices[current_k]) != 0
-                    and 2
+                    and 1.3
                     > float(prices[prices_k]) / float(current_prices[current_k])
-                    < 0.75
+                    < 0.7
                 ):
                     diff = float(prices[prices_k]) / float(current_prices[current_k])*100
                     price_change(prices_k, prices[prices_k], current_prices[current_k], "administration", "ADMINISTRATION", diff)
@@ -541,48 +595,6 @@ def update_administration(prices):
             return 0
 
 
-def get_administration_prices(class_=None, with_update=False):
-
-    test = "drive_test_fee"
-
-    if class_ in {"A", "A1", "A2"}:
-        test = "drive_test_fee_mc"
-    elif class_ == "BE":
-        test = "drive_test_fee_be"
-
-    keys_admin = (
-        "naf_fee",
-        test,
-        "theory_test_fee",
-        "issuance_fee",
-        "phote_fee",
-    )
-    if class_ == None:
-        keys_admin = (
-            "naf_fee",
-            "drive_test_fee",
-            "theory_test_fee",
-            "issuance_fee",
-            "phote_fee",
-            "drive_test_fee_mc",
-            "drive_test_fee_be",
-        )
-
-    db = sqlite3.connect(os.path.join(PATH, "billiglappen.db"))
-
-    cursor = db.cursor()
-    query = f"""SELECT {", ".join(keys_admin)} FROM administration;"""
-    if with_update:
-        query = f"""SELECT {", ".join(keys_admin)}, last_updated FROM administration;"""
-
-    cursor.execute(query)
-
-    results = cursor.fetchall()
-
-    if len(results) == 0:
-        return []
-    else:
-        return [dict(zip(keys_admin, i)) for i in results][0]
 
 
 if __name__ == "__main__":

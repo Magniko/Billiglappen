@@ -33,7 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+#endpoint for getting light classes prices
 @app.get("/light_classes")
 def endpoint_class_prices(
     class_: str,
@@ -77,7 +77,7 @@ def endpoint_class_prices(
     return sorted(result_driving_schools, key=lambda i: i["total_price"])
 
 
-# for TG-course prices
+# endpoint for TG-course prices
 @app.get("/trafikalt_grunnkurs")
 def endpoint_class_prices(
     threshold: float, lat: float, long_: float, over_25: bool = False
@@ -104,10 +104,14 @@ def endpoint_class_prices(
     return sorted(result_driving_schools, key=lambda i: i["tg_package_price"])
 
 
+# endpoint for getting NAF and Vegvesen fees
 @app.get("/naf_vegvesen_gebyrer")
 def endpoint_administration_prices():
     return get_administration_prices()
 
+
+
+# endpoint for getting the prices of a certain class from a specific school
 @app.get("/get_class_prices")
 def endpoint_get_class_prices(class_id: str):
     prices = get_class_prices(class_id)
@@ -117,6 +121,7 @@ def endpoint_get_class_prices(class_id: str):
     else:
         return {"Class not found."}
 
+# endpoint for listing all classes of a driving school
 @app.get("/get_classes_of_driving_school")
 def endpoint_get_classes_of_driving_school(school_id: str):
     return get_classes_of_driving_school(school_id)
@@ -124,7 +129,7 @@ def endpoint_get_classes_of_driving_school(school_id: str):
 
 
 
-
+# tbd
 @app.post("/submit_rating")
 def submit_rating():
 

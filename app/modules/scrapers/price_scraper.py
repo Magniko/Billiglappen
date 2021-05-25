@@ -17,22 +17,20 @@ from app.modules.database_module.db import (
     update_class,
     update_basic_course,
     update_administration,
+    get_administration_prices,
+
 )
 from app.modules.error_handler.error_handler import scraping_error
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="[%(asctime)s]: %(threadName)s: %(message)s",
-    datefmt="%H:%M:%S",
-)
-start = time.time()
-
-data_path = "app/data"
 
 
-def main(school=None):
 
-    files = glob.glob(os.path.join(data_path, "light_classes_xpaths/*.csv"))
+def run_scraper(PATH, school=None):
+
+    start = time.time()
+
+
+    files = glob.glob(os.path.join(PATH, "light_classes_xpaths/*.csv"))
 
     columns = (
         "id",
@@ -60,14 +58,15 @@ def main(school=None):
         frame = pd.read_csv(filename, header=0)
         frames.append(frame)
 
+    #used for debugging
     if school != None:
         frames = pd.read_csv(
-            os.path.join(data_path, f"light_classes_xpaths/{school}_light_classes.csv")
+            os.path.join(PATH, f"light_classes_xpaths/{school}_light_classes.csv")
         )
 
     df = df.append(frames, ignore_index=True)
 
-    tg = pd.read_csv(os.path.join(data_path, "tg_driving_schools.csv"))
+    tg = pd.read_csv(os.path.join(PATH, "tg_driving_schools.csv"))
 
     t_list = []
 
@@ -81,16 +80,26 @@ def main(school=None):
         t_list.append(t)
         t.start()
 
-    scrape_administration_prices()
+    admin_df = pd.read_csv(os.path.join(PATH, "administration_prices.csv"))
+
+
+    scrape_administration_prices(admin_df)
 
     for t in t_list:
-        t.join(60)
+        t.join(15)
         if t.is_alive():
             scraping_error(2, [t.name])
+
+    end = time.time()
+
+    logging.debug("Finished scraping. Elapsed time: %f", end-start)
+
     return 0
 
 
 def scrape_light_classes(class_):
+    if type(class_.price_url) == float and math.isnan(class_.price_url):
+        return 0
     logging.debug("Starting scraping of %s, %s...", class_.price_url, class_.name)
 
     url = format_url(class_.price_url)
@@ -106,7 +115,9 @@ def scrape_light_classes(class_):
         return scraping_error(3, [url])
 
     with_naf = False
-    naf_fee = 1300
+    admin_fees = get_administration_prices()
+
+    naf_fee = admin_fees["naf_fee"]
 
     from_front = False
 
@@ -259,6 +270,9 @@ def scrape_light_classes(class_):
 
 
 def scrape_tg(school):
+    if type(school.price_url) == float and math.isnan(school.price_url):
+        return 0
+
     logging.debug("Starting scraping of %s, %s...", school.price_url, school.name)
 
     url = format_url(school.price_url)
@@ -352,10 +366,9 @@ def scrape_tg(school):
     return msg
 
 
-def scrape_administration_prices():
+def scrape_administration_prices(df):
     logging.debug("Starting scraping of NAF and Vegvesen prices...")
 
-    df = pd.read_csv(os.path.join(data_path, "administration_prices.csv"))
 
     url_naf = df["naf_url"].item()
 
