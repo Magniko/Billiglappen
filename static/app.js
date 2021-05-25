@@ -230,6 +230,9 @@ formLightClasses.addEventListener('submit', event => {
                     </div>
 
                     <div class="package-details">
+                        <div class="package-price">
+                            <p>Grunnleggende pakkepris: <span>${formatPrice(pack.package_price)},-</span></p>
+                        </div>
                         <div class="lesson-price">
                             <p>Kjøretime: <span>${formatPrice(pack.lesson_price)},-</span></p>
                         </div>

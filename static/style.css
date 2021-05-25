@@ -79,17 +79,14 @@ body {
     border-radius: 10px;
     color: #ffffff;
     border: 2px solid #ccc;
-    padding: 5px;   
+    padding-bottom: 5px;
+    padding-top: 10px;   
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
 
 }
 
-.form * {
-    padding: 2px;
-
-}
 
 .select-class {
     display: inline-block;
