@@ -52,6 +52,12 @@ def run_scraper(PATH, school=None):
         "comment",
     )
 
+
+    admin_df = pd.read_csv(os.path.join(PATH, "administration_prices.csv"))
+
+
+    scrape_administration_prices(admin_df)
+
     frames = []
     df = pd.DataFrame(columns=columns)
     for filename in files:
@@ -80,10 +86,6 @@ def run_scraper(PATH, school=None):
         t_list.append(t)
         t.start()
 
-    admin_df = pd.read_csv(os.path.join(PATH, "administration_prices.csv"))
-
-
-    scrape_administration_prices(admin_df)
 
     for t in t_list:
         t.join(15)
