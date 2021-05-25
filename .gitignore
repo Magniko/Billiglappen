@@ -4,4 +4,5 @@ out*
 app/logging/*
 app/scrapers/*.csv
 app/scrapers/light_classes_xpaths/*
-__pycache__
+app/database/billiglappen.db
+**/__pycache__
