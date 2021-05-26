@@ -69,7 +69,7 @@ def price_change(column, new_price, current_price, id_, table, diff):
 
 def send_slack(type_url, message):
 
-    """slack_data = {
+    slack_data = {
                                 "blocks": [ {
                                             "type": "section",
                                             "text": {
@@ -92,4 +92,3 @@ def send_slack(type_url, message):
                         "Request to slack returned an error %s, the response is:\n%s"
                         % (err.status, err.info)
                 )
-            """
