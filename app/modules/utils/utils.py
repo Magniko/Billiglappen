@@ -24,13 +24,8 @@ def set_light_class_price(school, class_, threshold, n, lat, long_, include_admi
 
             school["total_price"] = (
                 school["lesson_price"] * n
-                + school["evaluation_price"] * 2
-                + school["safety_track_price"]
-                + school["safety_road_price"]
-                + school["drive_test_price"]
-                + school["other_price"]
+                + school["package_price"]
                 + school["hidden_price"]
-                - school["discount"]
             )
 
             if school["total_price"] != 0:

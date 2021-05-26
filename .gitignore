@@ -6,3 +6,4 @@ app/scrapers/*.csv
 app/scrapers/light_classes_xpaths/*
 app/database/billiglappen.db
 **/__pycache__
+client_secret*

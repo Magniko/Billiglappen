@@ -432,11 +432,16 @@ def parse_xpath(xpath, tree, e_info, front=False):
         if len(element) == 0:
             scraping_error(0, e_info)
             return float("inf")
-        element = element[0].text.lower()
+        element = element[0]
 
     except lxml.etree.XPathEvalError as e:
         scraping_error(0, e_info)
         return float("inf")
+
+    if len(element) > 0:
+        element = "".join((element.text.lower(), "".join([i.text.lower() for i in element if i.text != None])))
+    else:
+        element = element.text.lower()    
 
     element = re.sub(r"(?<=\d) (?=\d)|(^[^\d]+|(?<=\d)[^\d]+$)", "", element).split("+")
     prices = []
@@ -454,7 +459,8 @@ def parse_xpath(xpath, tree, e_info, front=False):
 
         price = re.sub("[^0-9]", "", el)
 
-        prices.append(int(price))
+        if len(price) > 0:
+            prices.append(int(price))
 
     return sum(prices)
 

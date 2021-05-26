@@ -127,6 +127,10 @@ def __database__init__():
 
     db.commit()
 
+    db.close()
+
+
+
 
 
 
@@ -138,7 +142,13 @@ def get_all_driving_schools():
 
     cursor.execute("SELECT * FROM driving_school")
 
-    return [dict(zip(keys_school, i)) for i in cursor.fetchall()]
+    results = cursor.fetchall()
+
+    db.close()
+
+
+
+    return [dict(zip(keys_school, i)) for i in results]
 
 
 def get_driving_school(school_id):
@@ -150,6 +160,8 @@ def get_driving_school(school_id):
     cursor.execute("SELECT * FROM driving_school WHERE driving_school_id=?", (school_id,))
 
     results = cursor.fetchall()
+
+    db.close()
 
     if len(results) == 0:
         return []
@@ -175,6 +187,8 @@ def get_class_prices(class_id):
     new_keys = list(keys_package)
     new_keys.append("last_updated")
 
+    db.close()
+
     if len(results) == 0:
         return []
     else:
@@ -195,6 +209,8 @@ def get_classes_of_driving_school(school_id):
 
     results = cursor.fetchall()
 
+    db.close()
+
     if len(results) == 0:
         return []
     else:
@@ -214,6 +230,8 @@ def get_basic_course_prices(school_id):
 
     new_keys = list(keys_tg)
     new_keys.append("last_updated")
+
+    db.close()
 
     if len(results) == 0:
         return []
@@ -261,6 +279,8 @@ def get_administration_prices(class_=None, with_update=False):
 
     results = cursor.fetchall()
 
+    db.close()
+
     if len(results) == 0:
         return []
     else:
@@ -307,9 +327,9 @@ def update_school(school_id, school):
             VALUES({', '.join([f'"{str(i)}"' for i in values])});"""
         cursor.execute(query)
 
-        cursor = db.cursor()
-
         db.commit()
+
+        db.close()
 
         return 1
 
@@ -333,9 +353,13 @@ def update_school(school_id, school):
 
             db.commit()
 
+            db.close()
+
             return 2
 
         else:
+            db.close()
+
             return 0
 
 
@@ -370,10 +394,10 @@ def update_class(ids, prices):
 
         cursor.execute(query)
 
-        cursor = db.cursor()
-
         db.commit()
-
+        
+        db.close()
+        
         return 1
 
     # update row
@@ -415,9 +439,13 @@ def update_class(ids, prices):
 
             db.commit()
 
+            db.close()
+
             return 2
 
         else:
+            db.close()
+
             return 0
 
 
@@ -456,9 +484,9 @@ def update_basic_course(school_id, prices):
 
         cursor.execute(query)
 
-        cursor = db.cursor()
-
         db.commit()
+
+        db.close()
 
         return 1
 
@@ -498,13 +526,15 @@ def update_basic_course(school_id, prices):
 
             cursor.execute(query)
 
-            cursor = db.cursor()
-
             db.commit()
+
+            db.close()
 
             return 2
 
         else:
+            db.close()
+
             return 0
 
 
@@ -539,9 +569,10 @@ def update_administration(prices):
 
         cursor.execute(query)
 
-        cursor = db.cursor()
 
         db.commit()
+
+        db.close()
 
         return 1
 
@@ -585,13 +616,16 @@ def update_administration(prices):
 
             cursor.execute(query)
 
-            cursor = db.cursor()
 
             db.commit()
+
+            db.close()
 
             return 2
 
         else:
+            
+            db.close()
             return 0
 
 
