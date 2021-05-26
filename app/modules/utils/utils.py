@@ -23,7 +23,7 @@ def set_light_class_price(school, class_, threshold, n, lat, long_, include_admi
                 n = school["n_lessons"]
 
             school["total_price"] = (
-                school["lesson_price"] * n
+                school["lesson_price"] * (n - chool["n_lessons"])
                 + school["package_price"]
                 + school["hidden_price"]
             )
