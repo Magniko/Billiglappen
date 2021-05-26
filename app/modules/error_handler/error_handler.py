@@ -68,7 +68,6 @@ def price_change(column, new_price, current_price, id_, table, diff):
 
 
 def send_slack(type_url, message):
-
     slack_data = {
                                 "blocks": [ {
                                             "type": "section",
@@ -80,15 +79,15 @@ def send_slack(type_url, message):
                 }
             
             
-                data = json.dumps(slack_data).encode()
-            
-                req = urllib.request.Request(type_url, data=data, headers={'Content-Type': 'application/json'})
-                try:
-                    r = urllib.request.urlopen(req)
-            
-                except HTTPError as err:
-                    print(err.msg)
-                    raise ValueError(
-                        "Request to slack returned an error %s, the response is:\n%s"
-                        % (err.status, err.info)
-                )
+    data = json.dumps(slack_data).encode()
+
+    req = urllib.request.Request(type_url, data=data, headers={'Content-Type': 'application/json'})
+    try:
+        r = urllib.request.urlopen(req)
+
+    except HTTPError as err:
+        print(err.msg)
+        raise ValueError(
+            "Request to slack returned an error %s, the response is:\n%s"
+            % (err.status, err.info)
+    )
